@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOR YOU — Patient Care Navigation</title>
+<style>
+  * { box-sizing: border-box; font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif; }
+
+  body { margin: 0; background: #0b1220; color: #e8eef7; }
+
+  .app-shell { max-width: 520px; margin: 0 auto; min-height: 100vh; background: #0b1220; }
+
+  .topbar {
+    background: #101a2d;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1d2b44;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .brand-name { font-size: 20px; font-weight: 800; color: #4da3ff; }
+
+  .box {
+    background: #111c30;
+    margin: 16px;
+    padding: 26px;
+    border-radius: 20px;
+    border: 1px solid #1d2b44;
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
+  }
+
+  h2 { margin: 0 0 10px; font-size: 23px; color: #fff; }
+  h3 { margin: 0 0 8px; color: #fff; }
+  p { line-height: 1.55; color: #b8c4d4; }
+
+  button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 14px;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: linear-gradient(135deg, #1668d6, #38a1ff);
+    color: white;
+    transition: .18s ease;
+  }
+
+  button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(56,161,255,.25); }
+
+  button.secondary { background: #16233b; color: #cfe3ff; border: 1px solid #26395a; }
+  button.secondary:hover { background: #1b2c48; }
+
+  button.voice-btn { background: linear-gradient(135deg, #7b2ff7, #38a1ff); }
+
+  button.danger {
+    background: linear-gradient(135deg, #d92121, #ff5252);
+    font-size: 14px;
+    width: auto;
+    padding: 10px 16px;
+    margin: 0;
+  }
+
+  select, input {
+    width: 100%;
+    padding: 14px;
+    margin-top: 8px;
+    border: 1px solid #26395a;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #0d1729;
+    color: #e8eef7;
+    outline: none;
+  }
+
+  select:focus, input:focus { border-color: #38a1ff; box-shadow: 0 0 0 3px rgba(56,161,255,.18); }
+
+  .hidden { display: none; }
+
+  .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+
+  .choice-button {
+    padding: 24px 16px;
+    border-radius: 18px;
+    background: #16233b;
+    border: 1px solid #26395a;
+    color: #cfe3ff;
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  .choice-button:hover { border-color: #38a1ff; background: #1b2c48; }
+
+  .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px; }
+
+  .dashboard-button {
+    padding: 22px 18px;
+    border-radius: 18px;
+    background: #16233b;
+    border: 1px solid #26395a;
+    color: #cfe3ff;
+    font-size: 17px;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .dashboard-button:hover { border-color: #38a1ff; background: #1b2c48; }
+
+  .hospital-card {
+    background: #0d1729;
+    border: 1px solid #22334f;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .hospital-card h3 { font-size: 17px; margin: 0 0 6px; }
+  .hospital-meta { font-size: 14px; color: #93a4ba; margin: 4px 0 10px; }
+
+  .badge {
+    display: inline-block;
+    background: #142741;
+    color: #7fc0ff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    margin: 4px 4px 0 0;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid #23405f;
+  }
+
+  .success-box { background: #0f2b1e; border-left: 5px solid #2e9e5b; padding: 16px; border-radius: 12px; margin-bottom: 15px; }
+  .medication-box { background: #0f2338; border-left: 5px solid #38a1ff; padding: 16px; border-radius: 12px; margin-bottom: 15px; }
+  .warning-box { background: #331418; border-left: 5px solid #ff5252; padding: 16px; border-radius: 12px; margin-bottom: 15px; }
+  .end-box { background: #101a2d; border-left: 5px solid #38a1ff; padding: 20px; border-radius: 14px; margin-top: 20px; text-align:center; }
+
+  .loading-text { text-align: center; color: #8fa3bb; font-size: 14px; margin-top: 10px; }
+
+  .voice-status {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #0d1729;
+    border: 1px solid #26395a;
+    font-size: 14px;
+    color: #9fd0ff;
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 rgba(255,82,82,.5); }
+    50% { box-shadow: 0 0 22px rgba(255,82,82,.75); }
+    100% { box-shadow: 0 0 0 rgba(255,82,82,.5); }
+  }
+
+  .blink-navigator {
+    animation: pulse 1s infinite;
+    background: linear-gradient(135deg, #d92121, #ff5252);
+    font-size: 15px;
+    padding: 16px;
+    border-radius: 14px;
+    font-weight: 900;
+    width: 100%;
+    margin-top: 15px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="topbar">
+    <div class="brand-name">FOR YOU</div>
+    <button class="danger" onclick="triggerHumanNavigatorEmergency()">🚨 Human Navigator</button>
+  </div>
+
+  <!-- LOGIN -->
+  <section id="pageLogin" class="box">
+    <h2 id="loginTitle">Login to FOR YOU</h2>
+    <p id="loginInstruction">Enter your mobile number to continue.</p>
+
+    <label for="loginMobile">Mobile Number</label>
+    <input id="loginMobile" placeholder="Enter mobile number">
+
+    <button onclick="loginUser()">Login</button>
+    <button class="voice-btn" onclick="startLoginVoiceAssistant()">🎤 Speak Login Details</button>
+
+    <div id="loginVoiceStatus" class="voice-status">
+      Tap the microphone button to speak your mobile number.
+    </div>
+
+    <p style="margin-top:15px; font-size:13px; color:#8fa3bb;">
+      Demo login: enter any valid mobile number.
+    </p>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="pageDashboard" class="box hidden">
+    <h2 id="dashboardTitle">Patient Dashboard</h2>
+    <p id="dashboardWelcomeText">Welcome! What would you like to do today?</p>
+
+    <div class="dashboard-grid">
+      <button class="dashboard-button" onclick="startAppFlow()">🏥 Find Care<br><span style="font-size:13px; font-weight:500; color:#93a4ba;">Search hospitals and book appointments</span></button>
+
+      <button class="dashboard-button" onclick="startAppFlow()">💊 Recovery Check-In<br><span style="font-size:13px; font-weight:500; color:#93a4ba;">Report how you feel after your visit</span></button>
+
+      <button class="dashboard-button" onclick="startAppFlow()">📅 Weekly Health Reminder<br><span style="font-size:13px; font-weight:500; color:#93a4ba;">Check your health condition twice weekly</span></button>
+    </div>
+
+    <button class="secondary" id="logoutButton" onclick="logoutUser()">Logout</button>
+  </section>
+
+  <!-- LANGUAGE -->
+  <section id="pageLanguage" class="box hidden">
+    <h2 id="welcomeTitle">Welcome to FOR YOU</h2>
+    <p id="languageInstruction">Please say or select your preferred language:</p>
+
+    <button class="secondary" onclick="setAppLanguage('english')">English</button>
+    <button class="secondary" onclick="setAppLanguage('tamil')">தமிழ்</button>
+    <button class="secondary" onclick="setAppLanguage('hindi')">हिन्दी</button>
+    <button class="secondary" onclick="setAppLanguage('telugu')">తెలుగు</button>
+
+    <button class="voice-btn" onclick="askLanguageByVoice()">🎤 Speak Language</button>
+
+    <div id="languageVoiceStatus" class="voice-status"></div>
+  </section>
+
+  <!-- VOICE OR MANUAL -->
+  <section id="pageMode" class="box hidden">
+    <h2 id="modeTitle">Choose how you want to use FOR YOU</h2>
+    <p id="modeInstruction">Say Voice or Manual, or choose an option below.</p>
+
+    <div class="choice-grid">
+      <button class="choice-button" onclick="setAppMode('voice')">🎤<br>Voice Assistance</button>
+      <button class="choice-button" onclick="setAppMode('manual')">✋<br>Manual Method</button>
+    </div>
+
+    <button class="voice-btn" onclick="askModeByVoice()">🎤 Speak Choice</button>
+
+    <div id="modeVoiceStatus" class="voice-status"></div>
+  </section>
+
+  <!-- SEARCH -->
+  <section id="pageSearch" class="box hidden">
+    <h2 id="findCareTitle">Find Care</h2>
+
+    <label for="need" id="needLabel">What help do you need?</label>
+    <select id="need">
+      <option value="Cardiology">Cardiology — Heart</option>
+      <option value="Orthopedics">Orthopedics — Bones & Joints</option>
+      <option value="ENT">ENT — Ear, Nose, Throat</option>
+      <option value="Gynecology">Gynecology — Women’s Health</option>
+    </select>
+
+    <label for="location" id="locationLabel">Your location</label>
+    <select id="location">
+      <option value="Chennai">Chennai</option>
+      <option value="Coimbatore">Coimbatore</option>
+      <option value="Trichy">Trichy</option>
+      <option value="Tirunelveli">Tirunelveli</option>
+      <option value="Puducherry">Puducherry</option>
+    </select>
+
+    <label for="doctorLanguage" id="doctorLanguageLabel">Language needed for doctor / hospital — optional</label>
+    <select id="doctorLanguage">
+      <option value="Any">Any language</option>
+      <option value="English">English</option>
+      <option value="Hindi">Hindi</option>
+      <option value="Tamil">Tamil</option>
+      <option value="Telugu">Telugu</option>
+      <option value="Malayalam">Malayalam</option>
+      <option value="Kannada">Kannada</option>
+      <option value="Marathi">Marathi</option>
+      <option value="Bengali">Bengali</option>
+      <option value="Gujarati">Gujarati</option>
+      <option value="Punjabi">Punjabi</option>
+      <option value="Odia">Odia</option>
+      <option value="Assamese">Assamese</option>
+      <option value="Urdu">Urdu</option>
+      <option value="Sanskrit">Sanskrit</option>
+      <option value="Konkani">Konkani</option>
+    </select>
+
+    <button id="searchButton" onclick="performSearch()">Search Hospitals</button>
+
+    <button class="voice-btn hidden" id="voiceSearchButton" onclick="startVoiceSearch()">🎤 Speak Search Details</button>
+  </section>
+
+  <!-- HOSPITALS -->
+  <section id="pageHospitals" class="box hidden">
+    <h2 id="hospitalsTitle">Available Hospitals</h2>
+    <div id="hospitalResultsContainer"></div>
+  </section>
+
+  <!-- BOOKING -->
+  <section id="pageBooking" class="box hidden">
+    <h2 id="bookingTitle">Confirm Appointment</h2>
+    <p id="slotDetailsText" style="font-weight:bold; color:#7fc0ff;"></p>
+
+    <label for="patientName" id="patientNameLabel">Patient Name</label>
+    <input id="patientName" placeholder="Enter full name">
+
+    <label for="mobile" id="mobileLabel">Mobile Number</label>
+    <input id="mobile" placeholder="Enter mobile number">
+
+    <button id="confirmBookingButton" onclick="confirmAppointment()">Confirm Booking</button>
+  </section>
+
+  <!-- CONFIRMATION -->
+  <section id="pageConfirmation" class="box hidden">
+    <div class="success-box">
+      <h2 id="confirmedTitle">Appointment Confirmed!</h2>
+      <p id="confirmedDetailsText"></p>
+    </div>
+
+    <div class="medication-box">
+      <h3 id="documentReminderTitle">📋 Document Reminder</h3>
+      <p id="documentReminderText">Remember to bring your Government ID proof, previous medical reports, and prescription slips.</p>
+    </div>
+
+    <button id="finishConsultationButton" onclick="simulateDoctorVisitCompleted()">✅ Finish Consultation</button>
+  </section>
+
+  <!-- POST CONSULTATION -->
+  <section id="pagePostConsultation" class="box hidden">
+    <div class="success-box">
+      <h2 id="thankYouTitle" style="margin-bottom:4px;">Thank you for visiting</h2>
+      <h3 id="visitedHospitalNameDisplay" style="color:#7fc0ff; margin-top:0;"></h3>
+    </div>
+
+    <div class="medication-box">
+      <h3 id="medicationTitle">💊 Medication Guidance</h3>
+      <p id="medicationText" style="font-size:17px; font-weight:bold; margin:0;">Properly follow your medication.</p>
+    </div>
+
+    <button id="recoveryButton" onclick="goToRecoveryPage()">Proceed to Recovery Check-In</button>
+  </section>
+
+  <!-- RECOVERY -->
+  <section id="pageRecovery" class="box hidden">
+    <h2 id="recoveryTitle">Post-Visit Recovery Check-In</h2>
+    <p id="recoveryPromptText">How are you feeling after meeting the doctor? Choose Good / Better or Worse.</p>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="secondary" id="goodButton" onclick="handleRecoveryAnswer('good')">Good / Better</button>
+      <button class="secondary" id="worseButton" onclick="handleRecoveryAnswer('worse')" style="border-color:#ff5252; color:#ff8080;">Worse</button>
+    </div>
+
+    <button class="voice-btn hidden" id="speakRecoveryButton" onclick="startVoiceInputForRecovery()">🎤 Speak Recovery Answer</button>
+
+    <div id="recoveryResultContainer" class="hidden" style="margin-top:15px;"></div>
+
+    <button id="weeklyNextButton" class="hidden" onclick="goToWeeklyPage()">Proceed to Weekly Twice Question</button>
+  </section>
+
+  <!-- WEEKLY TWICE QUESTION — FINAL PAGE -->
+  <section id="pageWeekly" class="box hidden">
+    <h2 id="weeklyTitle">📅 Weekly Twice Question</h2>
+    <p id="weeklyPromptText">This is your twice-weekly health condition question. How is your health condition now?</p>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="secondary" id="weeklyGoodButton" onclick="handleWeeklyAnswer('good')">Good / Better</button>
+      <button class="secondary" id="weeklyWorseButton" onclick="handleWeeklyAnswer('worse')" style="border-color:#ff5252; color:#ff8080;">Worse</button>
+    </div>
+
+    <button class="voice-btn hidden" id="speakWeeklyButton" onclick="startVoiceInputForWeekly()">🎤 Speak Weekly Answer</button>
+
+    <div id="weeklyResultContainer" class="hidden" style="margin-top:15px;"></div>
+
+    <div id="weeklyEndContainer" class="end-box hidden">
+      <h2 id="weeklyEndTitle">✅ FOR YOU session completed</h2>
+      <p id="weeklyEndText">Your weekly twice health question has been recorded. This session has ended.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  let appLanguage = "english";
+  let appMode = "manual";
+  let currentStep = "LOGIN";
+  let selectedHospital = null;
+  let hospitalsList = [];
+  let loggedInMobile = "";
+  let appEnded = false;
+
+  const uiText = {
+    english: {
+      code: "en-US",
+      dashboardTitle: "Patient Dashboard",
+      dashboardWelcome: "Welcome! What would you like to do today?",
+      findCare: "🏥 Find Care",
+      findCareSub: "Search hospitals and book appointments",
+      recovery: "💊 Recovery Check-In",
+      recoverySub: "Report how you feel after your visit",
+      weekly: "📅 Weekly Health Reminder",
+      weeklySub: "Check your health condition twice weekly",
+      logout: "Logout",
+      welcomeTitle: "Welcome to FOR YOU",
+      languageInstruction: "Please say or select your preferred language:",
+      askLanguage: "Please say your language: English, Tamil, Hindi, or Telugu.",
+      modeTitle: "Choose how you want to use FOR YOU",
+      modeInstruction: "Say Voice or Manual, or choose an option below.",
+      askMode: "Do you want voice assistance or manual method? Say Voice or Manual.",
+      voiceMode: "🎤<br>Voice Assistance",
+      manualMode: "✋<br>Manual Method",
+      findCareTitle: "Find Care",
+      needLabel: "What help do you need?",
+      locationLabel: "Your location",
+      doctorLanguageLabel: "Language needed for doctor / hospital — optional",
+      searchButton: "Search Hospitals",
+      voiceSearchButton: "🎤 Speak Search Details",
+      hospitalsTitle: "Available Hospitals",
+      bookingTitle: "Confirm Appointment",
+      patientNameLabel: "Patient Name",
+      patientNamePlaceholder: "Enter full name",
+      mobileLabel: "Mobile Number",
+      mobilePlaceholder: "Enter mobile number",
+      confirmBookingButton: "Confirm Booking",
+      confirmedTitle: "Appointment Confirmed!",
+      documentReminderTitle: "📋 Document Reminder",
+      documentReminderText: "Remember to bring your Government ID proof, previous medical reports, and prescription slips.",
+      finishConsultationButton: "✅ Finish Consultation",
+      thankYouTitle: "Thank you for visiting",
+      medicationTitle: "💊 Medication Guidance",
+      medicationText: "Properly follow your medication.",
+      recoveryButton: "Proceed to Recovery Check-In",
+      recoveryTitle: "Post-Visit Recovery Check-In",
+      recoveryPrompt: "How are you feeling after meeting the doctor? Choose Good / Better or Worse.",
+      goodButton: "Good / Better",
+      worseButton: "Worse",
+      speakRecoveryButton: "🎤 Speak Recovery Answer",
+      weeklyNext: "Proceed to Weekly Twice Question",
+      weeklyTitle: "📅 Weekly Twice Question",
+      weeklyPrompt: "This is your twice-weekly health condition question. How is your health condition now?",
+      weeklyGood: "Good / Better",
+      weeklyWorse: "Worse",
+      speakWeekly: "🎤 Speak Weekly Answer",
+      weeklyGoodResponse: "Great to hear! Your weekly response has been recorded.",
+      weeklyWorseResponse: "Warning! Your condition is worse. Your Human Navigator has been alerted.",
+      sessionEnded: "✅ FOR YOU session completed",
+      sessionEndedText: "Your weekly twice health question has been recorded. This session has ended.",
+      selectHospital: "Select",
+      option: "Option",
+      dateLabel: "Date",
+      timeLabel: "Time",
+      slotLabel: "Slot",
+      patientLabel: "Patient",
+      hospitalLabel: "Hospital",
+      languageSupportLabel: "Language support",
+      criticalAlert: "🚨 CRITICAL ALERT",
+      contactNavigator: "👤 CONTACT YOUR HUMAN NAVIGATOR IMMEDIATELY",
+      invalidMobile: "Please enter a valid mobile number.",
+      searching: "Searching hospitals...",
+      speakLanguageButton: "🎤 Speak Language",
+      speakModeButton: "🎤 Speak Choice",
+      loginTitle: "Login to FOR YOU",
+      loginInstruction: "Enter your mobile number to continue.",
+      loginButton: "Login",
+      loginPlaceholder: "Enter mobile number",
+      loginDemo: "Demo login: enter any valid mobile number.",
+      loginSuccess: "Login successful.",
+      loginVoiceButton: "🎤 Speak Login Details",
+      loginVoiceAsk: "Please say your mobile number.",
+      listening: "🎙️ Listening... Please say your mobile number.",
+      youSaid: "You said:",
+      tryAgain: "Please try again.",
+      voiceNotSupported: "Speech recognition is not supported. Please use Google Chrome.",
+
+      voiceAskSearch: "Which specialty and location do you need? For example, say Cardiology in Chennai.",
+      voicePromptHospital: "Here are the matching hospitals. Choose an option.",
+      voiceAskName: "Please enter the patient's full name.",
+      voiceAskMobile: "Please enter your mobile number.",
+      voiceConfirmed: "Your appointment is confirmed.",
+      voicePostVisit: "Thank you for visiting ",
+      voiceMedication: "Please properly follow your medication.",
+      voiceRecovery: "How are you feeling after meeting the doctor? Say Good, Better, or Worse.",
+      voiceWorse: "Warning! Your condition is worse! Contact your Human Navigator immediately.",
+      voiceGood: "Great to hear! Continue your recovery.",
+      voiceWeekly: "Weekly twice health question: How is your health condition now? Say Good, Better, or Worse.",
+      voiceSessionEnd: "Your weekly response has been recorded. Your FOR YOU session has ended."
+    },
+
+    tamil: {
+      code: "ta-IN",
+      dashboardTitle: "நோயாளி டாஷ்போர்டு",
+      dashboardWelcome: "வணக்கம்! இன்று நீங்கள் என்ன செய்ய விரும்புகிறீர்கள்?",
+      findCare: "🏥 சிகிச்சை தேடுங்கள்",
+      findCareSub: "மருத்துவமனைகளைத் தேடி சந்திப்பை பதிவு செய்யுங்கள்",
+      recovery: "💊 மீட்சி சோதனை",
+      recoverySub: "சந்திப்பிற்குப் பிறகு உங்கள் நிலையைத் தெரிவிக்கவும்",
+      weekly: "📅 வாராந்திர உடல்நல நினைவூட்டல்",
+      weeklySub: "வாரத்திற்கு இருமுறை உடல்நிலையை சரிபார்க்கவும்",
+      logout: "வெளியேறு",
+      welcomeTitle: "FOR YOU செயலிக்கு வரவேற்கிறோம்",
+      languageInstruction: "உங்களுக்கு விருப்பமான மொழியைக் கூறவும் அல்லது தேர்ந்தெடுக்கவும்:",
+      askLanguage: "உங்கள் மொழியைக் கூறுங்கள்: ஆங்கிலம், தமிழ், இந்தி அல்லது தெலுங்கு.",
+      modeTitle: "FOR YOU செயலியை எப்படி பயன்படுத்த விரும்புகிறீர்கள்?",
+      modeInstruction: "குரல் அல்லது கைமுறை எனக் கூறவும், அல்லது கீழே உள்ள விருப்பத்தைத் தேர்ந்தெடுக்கவும்.",
+      askMode: "குரல் உதவி வேண்டுமா அல்லது கைமுறை முறை வேண்டுமா? குரல் அல்லது கைமுறை எனக் கூறவும்.",
+      voiceMode: "🎤<br>குரல் உதவி",
+      manualMode: "✋<br>கைமுறை முறை",
+      findCareTitle: "சிகிச்சை தேடுங்கள்",
+      needLabel: "உங்களுக்கு என்ன உதவி தேவை?",
+      locationLabel: "உங்கள் இடம்",
+      doctorLanguageLabel: "மருத்துவர் / மருத்துவமனைக்குத் தேவையான மொழி — விரும்பினால்",
+      searchButton: "மருத்துவமனைகளைத் தேடுங்கள்",
+      voiceSearchButton: "🎤 தேடல் விவரங்களைக் கூறுங்கள்",
+      hospitalsTitle: "கிடைக்கக்கூடிய மருத்துவமனைகள்",
+      bookingTitle: "சந்திப்பை உறுதிசெய்யவும்",
+      patientNameLabel: "நோயாளியின் பெயர்",
+      patientNamePlaceholder: "முழு பெயரை உள்ளிடவும்",
+      mobileLabel: "கைபேசி எண்",
+      mobilePlaceholder: "கைபேசி எண்ணை உள்ளிடவும்",
+      confirmBookingButton: "சந்திப்பை உறுதிசெய்",
+      confirmedTitle: "சந்திப்பு உறுதி செய்யப்பட்டது!",
+      documentReminderTitle: "📋 ஆவண நினைவூட்டல்",
+      documentReminderText: "அரசு அடையாள அட்டை, முந்தைய மருத்துவ அறிக்கைகள் மற்றும் மருந்துச் சீட்டுகளை கொண்டு வரவும்.",
+      finishConsultationButton: "✅ சந்திப்பை முடிக்கவும்",
+      thankYouTitle: "வருகைக்கு நன்றி",
+      medicationTitle: "💊 மருந்து வழிகாட்டல்",
+      medicationText: "உங்கள் மருந்துகளை சரியாக பின்பற்றுங்கள்.",
+      recoveryButton: "மீட்சி சோதனைக்குச் செல்லவும்",
+      recoveryTitle: "சந்திப்பிற்குப் பிறகு மீட்சி சோதனை",
+      recoveryPrompt: "மருத்துவரை சந்தித்த பிறகு நீங்கள் எப்படி உணர்கிறீர்கள்? நன்று / முன்னேறியுள்ளேன் அல்லது மோசம் எனத் தேர்ந்தெடுக்கவும்.",
+      goodButton: "நன்று / முன்னேறியுள்ளேன்",
+      worseButton: "மோசம்",
+      speakRecoveryButton: "🎤 மீட்சி பதிலைக் கூறுங்கள்",
+      weeklyNext: "வாராந்திர இருமுறை கேள்விக்குச் செல்லவும்",
+      weeklyTitle: "📅 வாராந்திர இருமுறை கேள்வி",
+      weeklyPrompt: "இது உங்கள் வாரத்திற்கு இருமுறை உடல்நல கேள்வி. உங்கள் உடல்நிலை இப்போது எப்படி இருக்கிறது?",
+      weeklyGood: "நன்று / முன்னேறியுள்ளேன்",
+      weeklyWorse: "மோசம்",
+      speakWeekly: "🎤 வாராந்திர பதிலைக் கூறுங்கள்",
+      weeklyGoodResponse: "மகிழ்ச்சி! உங்கள் வாராந்திர பதில் பதிவு செய்யப்பட்டது.",
+      weeklyWorseResponse: "எச்சரிக்கை! உங்கள் உடல்நிலை மோசமாக உள்ளது. உங்கள் மனித வழிகாட்டிக்கு தெரிவிக்கப்பட்டது.",
+      sessionEnded: "✅ FOR YOU அமர்வு முடிந்தது",
+      sessionEndedText: "உங்கள் வாராந்திர இருமுறை உடல்நல பதில் பதிவு செய்யப்பட்டது. இந்த அமர்வு முடிந்தது.",
+      selectHospital: "தேர்ந்தெடுக்கவும்",
+      option: "விருப்பம்",
+      dateLabel: "தேதி",
+      timeLabel: "நேரம்",
+      slotLabel: "நேரம்",
+      patientLabel: "நோயாளி",
+      hospitalLabel: "மருத்துவமனை",
+      languageSupportLabel: "மொழி ஆதரவு",
+      criticalAlert: "🚨 முக்கிய எச்சரிக்கை",
+      contactNavigator: "👤 உடனடியாக உங்கள் மனித வழிகாட்டியைத் தொடர்பு கொள்ளுங்கள்",
+      invalidMobile: "சரியான கைபேசி எண்ணை உள்ளிடவும்.",
+      searching: "மருத்துவமனைகளைத் தேடுகிறது...",
+      speakLanguageButton: "🎤 மொழியைக் கூறுங்கள்",
+      speakModeButton: "🎤 தேர்வைக் கூறுங்கள்",
+      loginTitle: "FOR YOU இல் உள்நுழையவும்",
+      loginInstruction: "தொடர உங்கள் கைபேசி எண்ணை உள்ளிடவும்.",
+      loginButton: "உள்நுழை",
+      loginPlaceholder: "கைபேசி எண்ணை உள்ளிடவும்",
+      loginDemo: "டெமோ உள்நுழைவு: சரியான எந்த கைபேசி எண்ணையும் உள்ளிடவும்.",
+      loginSuccess: "உள்நுழைவு வெற்றிகரமாக நடைபெற்றது.",
+      loginVoiceButton: "🎤 உள்நுழைவு விவரங்களைக் கூறுங்கள்",
+      loginVoiceAsk: "உங்கள் கைபேசி எண்ணைச் சொல்லுங்கள்.",
+      listening: "🎙️ கேட்கிறது... உங்கள் கைபேசி எண்ணைச் சொல்லுங்கள்.",
+      youSaid: "நீங்கள் சொன்னது:",
+      tryAgain: "மீண்டும் முயற்சிக்கவும்.",
+      voiceNotSupported: "குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை. Google Chrome ஐப் பயன்படுத்தவும்.",
+
+      voiceAskSearch: "உங்களுக்கு எந்த சிகிச்சை மற்றும் எந்த இடம் வேண்டும்? உதாரணமாக, சென்னையில் இருதய சிகிச்சை எனக் கூறுங்கள்.",
+      voicePromptHospital: "பொருத்தமான மருத்துவமனைகள் உள்ளன. ஒரு விருப்பத்தைத் தேர்ந்தெடுக்கவும்.",
+      voiceAskName: "நோயாளியின் முழு பெயரை உள்ளிடவும்.",
+      voiceAskMobile: "உங்கள் கைபேசி எண்ணை உள்ளிடவும்.",
+      voiceConfirmed: "உங்கள் சந்திப்பு உறுதி செய்யப்பட்டது.",
+      voicePostVisit: "வருகைக்கு நன்றி ",
+      voiceMedication: "உங்கள் மருந்துகளை சரியாக பின்பற்றுங்கள்.",
+      voiceRecovery: "மருத்துவரை சந்தித்த பிறகு நீங்கள் எப்படி உணர்கிறீர்கள்? நன்று, முன்னேறியுள்ளேன், அல்லது மோசம் எனக் கூறவும்.",
+      voiceWorse: "எச்சரிக்கை! உங்கள் உடல்நிலை மோசமாக உள்ளது. உடனடியாக உங்கள் மனித வழிகாட்டியைத் தொடர்பு கொள்ளுங்கள்.",
+      voiceGood: "மகிழ்ச்சி! உங்கள் மீட்சியைத் தொடர்ந்து கவனித்துக் கொள்ளுங்கள்.",
+      voiceWeekly: "வாராந்திர இருமுறை உடல்நல கேள்வி: உங்கள் உடல்நிலை இப்போது எப்படி இருக்கிறது? நன்று, முன்னேறியுள்ளேன், அல்லது மோசம் எனக் கூறவும்.",
+      voiceSessionEnd: "உங்கள் வாராந்திர பதில் பதிவு செய்யப்பட்டது. உங்கள் FOR YOU அமர்வு முடிந்தது."
+    },
+
+    hindi: {
+      code: "hi-IN",
+      dashboardTitle: "रोगी डैशबोर्ड",
+      dashboardWelcome: "स्वागत है! आज आप क्या करना चाहते हैं?",
+      findCare: "🏥 देखभाल खोजें",
+      findCareSub: "अस्पताल खोजें और अपॉइंटमेंट बुक करें",
+      recovery: "💊 रिकवरी जांच",
+      recoverySub: "विज़िट के बाद अपनी स्थिति बताएं",
+      weekly: "📅 साप्ताहिक स्वास्थ्य अनुस्मारक",
+      weeklySub: "सप्ताह में दो बार स्वास्थ्य की जांच करें",
+      logout: "लॉगआउट",
+      welcomeTitle: "FOR YOU में आपका स्वागत है",
+      languageInstruction: "कृपया अपनी पसंदीदा भाषा बोलें या चुनें:",
+      askLanguage: "कृपया अपनी भाषा बोलें: इंग्लिश, तमिल, हिंदी, या तेलुगु।",
+      modeTitle: "आप FOR YOU का उपयोग कैसे करना चाहते हैं?",
+      modeInstruction: "वॉइस या मैनुअल बोलें, या नीचे विकल्प चुनें।",
+      askMode: "क्या आप वॉइस असिस्टेंस चाहते हैं या मैनुअल विधि? वॉइस या मैनुअल बोलें।",
+      voiceMode: "🎤<br>वॉइस असिस्टेंस",
+      manualMode: "✋<br>मैनुअल विधि",
+      findCareTitle: "देखभाल खोजें",
+      needLabel: "आपको किस तरह की मदद चाहिए?",
+      locationLabel: "आपका स्थान",
+      doctorLanguageLabel: "डॉक्टर / अस्पताल के लिए आवश्यक भाषा — वैकल्पिक",
+      searchButton: "अस्पताल खोजें",
+      voiceSearchButton: "🎤 खोज विवरण बोलें",
+      hospitalsTitle: "उपलब्ध अस्पताल",
+      bookingTitle: "अपॉइंटमेंट की पुष्टि करें",
+      patientNameLabel: "रोगी का नाम",
+      patientNamePlaceholder: "पूरा नाम दर्ज करें",
+      mobileLabel: "मोबाइल नंबर",
+      mobilePlaceholder: "मोबाइल नंबर दर्ज करें",
+      confirmBookingButton: "बुकिंग की पुष्टि करें",
+      confirmedTitle: "अपॉइंटमेंट पुष्ट हो गया!",
+      documentReminderTitle: "📋 दस्तावेज़ अनुस्मारक",
+      documentReminderText: "सरकारी पहचान पत्र, पिछली चिकित्सा रिपोर्ट और पर्चे साथ लाना न भूलें।",
+      finishConsultationButton: "✅ परामर्श पूरा करें",
+      thankYouTitle: "आने के लिए धन्यवाद",
+      medicationTitle: "💊 दवा मार्गदर्शन",
+      medicationText: "कृपया अपनी दवाइयों का ठीक से पालन करें।",
+      recoveryButton: "रिकवरी जांच के लिए आगे बढ़ें",
+      recoveryTitle: "विज़िट के बाद रिकवरी जांच",
+      recoveryPrompt: "डॉक्टर से मिलने के बाद आप कैसा महसूस कर रहे हैं? अच्छा / बेहतर या बदतर चुनें।",
+      goodButton: "अच्छा / बेहतर",
+      worseButton: "बदतर",
+      speakRecoveryButton: "🎤 रिकवरी उत्तर बोलें",
+      weeklyNext: "साप्ताहिक दो बार प्रश्न पर जाएं",
+      weeklyTitle: "📅 साप्ताहिक दो बार प्रश्न",
+      weeklyPrompt: "यह आपका सप्ताह में दो बार का स्वास्थ्य प्रश्न है। अब आपकी स्वास्थ्य स्थिति कैसी है?",
+      weeklyGood: "अच्छा / बेहतर",
+      weeklyWorse: "बदतर",
+      speakWeekly: "🎤 साप्ताहिक उत्तर बोलें",
+      weeklyGoodResponse: "बहुत अच्छा! आपका साप्ताहिक उत्तर दर्ज कर लिया गया है।",
+      weeklyWorseResponse: "चेतावनी! आपकी स्थिति बदतर है। आपके ह्यूमन नेविगेटर को सूचित कर दिया गया है।",
+      sessionEnded: "✅ FOR YOU सत्र पूरा हुआ",
+      sessionEndedText: "आपका साप्ताहिक दो बार स्वास्थ्य उत्तर दर्ज कर लिया गया है। यह सत्र समाप्त हो गया है।",
+      selectHospital: "चुनें",
+      option: "विकल्प",
+      dateLabel: "तारीख",
+      timeLabel: "समय",
+      slotLabel: "समय",
+      patientLabel: "रोगी",
+      hospitalLabel: "अस्पताल",
+      languageSupportLabel: "भाषा सहायता",
+      criticalAlert: "🚨 महत्वपूर्ण चेतावनी",
+      contactNavigator: "👤 तुरंत अपने ह्यूमन नेविगेटर से संपर्क करें",
+      invalidMobile: "कृपया मान्य मोबाइल नंबर दर्ज करें।",
+      searching: "अस्पताल खोज रहा है...",
+      speakLanguageButton: "🎤 भाषा बोलें",
+      speakModeButton: "🎤 विकल्प बोलें",
+      loginTitle: "FOR YOU में लॉगिन करें",
+      loginInstruction: "जारी रखने के लिए अपना मोबाइल नंबर दर्ज करें।",
+      loginButton: "लॉगिन",
+      loginPlaceholder: "मोबाइल नंबर दर्ज करें",
+      loginDemo: "डेमो लॉगिन: कोई भी मान्य मोबाइल नंबर दर्ज करें।",
+      loginSuccess: "लॉगिन सफल।",
+      loginVoiceButton: "🎤 लॉगिन विवरण बोलें",
+      loginVoiceAsk: "कृपया अपना मोबाइल नंबर बोलें।",
+      listening: "🎙️ सुन रहा है... कृपया अपना मोबाइल नंबर बोलें।",
+      youSaid: "आपने कहा:",
+      tryAgain: "कृपया फिर प्रयास करें।",
+      voiceNotSupported: "स्पीच रिकग्निशन समर्थित नहीं है। Google Chrome का उपयोग करें।",
+
+      voiceAskSearch: "आपको किस विशेषज्ञता और किस शहर में देखभाल चाहिए? उदाहरण के लिए, चेन्नई में हृदय रोग विशेषज्ञ बोलें।",
+      voicePromptHospital: "मिलान वाले अस्पताल उपलब्ध हैं। एक विकल्प चुनें।",
+      voiceAskName: "कृपया रोगी का पूरा नाम दर्ज करें।",
+      voiceAskMobile: "कृपया अपना मोबाइल नंबर दर्ज करें।",
+      voiceConfirmed: "आपका अपॉइंटमेंट पुष्ट हो गया है।",
+      voicePostVisit: "आने के लिए धन्यवाद ",
+      voiceMedication: "कृपया अपनी दवाइयों का ठीक से पालन करें।",
+      voiceRecovery: "डॉक्टर से मिलने के बाद आप कैसा महसूस कर रहे हैं? अच्छा, बेहतर, या बदतर बोलें।",
+      voiceWorse: "चेतावनी! आपकी स्थिति बदतर है। कृपया तुरंत अपने ह्यूमन नेविगेटर से संपर्क करें।",
+      voiceGood: "बहुत अच्छा! अपनी रिकवरी जारी रखें।",
+      voiceWeekly: "साप्ताहिक दो बार स्वास्थ्य प्रश्न: अब आपकी स्वास्थ्य स्थिति कैसी है? अच्छा, बेहतर, या बदतर बोलें।",
+      voiceSessionEnd: "आपका साप्ताहिक उत्तर दर्ज कर लिया गया है। आपका FOR YOU सत्र समाप्त हो गया है।"
+    },
+
+    telugu: {
+      code: "te-IN",
+      dashboardTitle: "రోగి డాష్‌బోర్డ్",
+      dashboardWelcome: "స్వాగతం! ఈరోజు మీరు ఏం చేయాలనుకుంటున్నారు?",
+      findCare: "🏥 వైద్య సహాయం కనుగొనండి",
+      findCareSub: "ఆసుపత్రులను వెతికి అపాయింట్‌మెంట్ బుక్ చేయండి",
+      recovery: "💊 రికవరీ తనిఖీ",
+      recoverySub: "సందర్శన తర్వాత మీ స్థితిని తెలియజేయండి",
+      weekly: "📅 వారపు ఆరోగ్య రిమైండర్",
+      weeklySub: "వారానికి రెండుసార్లు ఆరోగ్యాన్ని తనిఖీ చేయండి",
+      logout: "లాగ్ అవుట్",
+      welcomeTitle: "FOR YOU కి స్వాగతం",
+      languageInstruction: "దయచేసి మీకు నచ్చిన భాషను చెప్పండి లేదా ఎంచుకోండి:",
+      askLanguage: "దయచేసి మీ భాషను చెప్పండి: ఇంగ్లీష్, తమిళం, హిందీ లేదా తెలుగు.",
+      modeTitle: "మీరు FOR YOU ని ఎలా ఉపయోగించాలనుకుంటున్నారు?",
+      modeInstruction: "వాయిస్ లేదా మాన్యువల్ అని చెప్పండి, లేదా క్రింద ఎంపికను ఎంచుకోండి.",
+      askMode: "మీకు వాయిస్ అసిస్టెన్స్ కావాలా లేదా మాన్యువల్ పద్ధతి కావాలా? వాయిస్ లేదా మాన్యువల్ అని చెప్పండి.",
+      voiceMode: "🎤<br>వాయిస్ అసిస్టెన్స్",
+      manualMode: "✋<br>మాన్యువల్ పద్ధతి",
+      findCareTitle: "వైద్య సహాయం కనుగొనండి",
+      needLabel: "మీకు ఏ సహాయం కావాలి?",
+      locationLabel: "మీ ప్రాంతం",
+      doctorLanguageLabel: "వైద్యుడు / ఆసుపత్రి కోసం కావాల్సిన భాష — ఐచ్ఛికం",
+      searchButton: "ఆసుపత్రులను వెతకండి",
+      voiceSearchButton: "🎤 శోధన వివరాలు చెప్పండి",
+      hospitalsTitle: "అందుబాటులో ఉన్న ఆసుపత్రులు",
+      bookingTitle: "అపాయింట్‌మెంట్‌ను ఖరారు చేయండి",
+      patientNameLabel: "రోగి పేరు",
+      patientNamePlaceholder: "పూర్తి పేరు నమోదు చేయండి",
+      mobileLabel: "మొబైల్ నంబర్",
+      mobilePlaceholder: "మొబైల్ నంబర్ నమోదు చేయండి",
+      confirmBookingButton: "బుకింగ్‌ను ఖరారు చేయండి",
+      confirmedTitle: "అపాయింట్‌మెంట్ ఖరారు అయింది!",
+      documentReminderTitle: "📋 పత్రాల గుర్తు",
+      documentReminderText: "ప్రభుత్వ గుర్తింపు కార్డు, గత వైద్య నివేదికలు మరియు ప్రిస్క్రిప్షన్ స్లిప్‌లను తీసుకురావడం మర్చిపోవద్దు.",
+      finishConsultationButton: "✅ సంప్రదింపును పూర్తి చేయండి",
+      thankYouTitle: "వచ్చినందుకు ధన్యవాదాలు",
+      medicationTitle: "💊 మందుల సూచన",
+      medicationText: "మీ మందులను సరిగ్గా తీసుకోండి.",
+      recoveryButton: "రికవరీ తనిఖీకి వెళ్లండి",
+      recoveryTitle: "సందర్శన తర్వాత రికవరీ తనిఖీ",
+      recoveryPrompt: "వైద్యుడిని కలిసిన తర్వాత మీరు ఎలా ఉన్నారు? మంచిగా / మెరుగుపడ్డాను లేదా చెడుగా ఎంచుకోండి.",
+      goodButton: "మంచిగా / మెరుగుపడ్డాను",
+      worseButton: "చెడుగా ఉంది",
+      speakRecoveryButton: "🎤 రికవరీ సమాధానం చెప్పండి",
+      weeklyNext: "వారపు రెండుసార్లు ప్రశ్నకు వెళ్లండి",
+      weeklyTitle: "📅 వారపు రెండుసార్లు ప్రశ్న",
+      weeklyPrompt: "ఇది మీ వారానికి రెండుసార్లు ఆరోగ్య ప్రశ్న. మీ ఆరోగ్య స్థితి ఇప్పుడు ఎలా ఉంది?",
+      weeklyGood: "మంచిగా / మెరుగుపడ్డాను",
+      weeklyWorse: "చెడుగా ఉంది",
+      speakWeekly: "🎤 వారపు సమాధానం చెప్పండి",
+      weeklyGoodResponse: "చాలా మంచిది! మీ వారపు సమాధానం నమోదు చేయబడింది.",
+      weeklyWorseResponse: "హెచ్చరిక! మీ పరిస్థితి చెడుగా ఉంది. మీ హ్యూమన్ నావిగేటర్‌కు తెలియజేయబడింది.",
+      sessionEnded: "✅ FOR YOU సెషన్ పూర్తయింది",
+      sessionEndedText: "మీ వారపు రెండుసార్లు ఆరోగ్య సమాధానం నమోదు చేయబడింది. ఈ సెషన్ ముగిసింది.",
+      selectHospital: "ఎంచుకోండి",
+      option: "ఎంపిక",
+      dateLabel: "తేదీ",
+      timeLabel: "సమయం",
+      slotLabel: "సమయం",
+      patientLabel: "రోగి",
+      hospitalLabel: "ఆసుపత్రి",
+      languageSupportLabel: "భాష మద్దతు",
+      criticalAlert: "🚨 ముఖ్యమైన హెచ్చరిక",
+      contactNavigator: "👤 వెంటనే మీ హ్యూమన్ నావిగేటర్‌ను సంప్రదించండి",
+      invalidMobile: "దయచేసి సరైన మొబైల్ నంబర్ నమోదు చేయండి.",
+      searching: "ఆసుపత్రులను వెతుకుతోంది...",
+      speakLanguageButton: "🎤 భాష చెప్పండి",
+      speakModeButton: "🎤 ఎంపిక చెప్పండి",
+      loginTitle: "FOR YOU లో లాగిన్ అవ్వండి",
+      loginInstruction: "కొనసాగడానికి మీ మొబైల్ నంబర్ నమోదు చేయండి.",
+      loginButton: "లాగిన్",
+      loginPlaceholder: "మొబైల్ నంబర్ నమోదు చేయండి",
+      loginDemo: "డెమో లాగిన్: ఏ సరైన మొబైల్ నంబర్ అయినా నమోదు చేయండి.",
+      loginSuccess: "లాగిన్ విజయవంతమైంది.",
+      loginVoiceButton: "🎤 లాగిన్ వివరాలు చెప్పండి",
+      loginVoiceAsk: "దయచేసి మీ మొబైల్ నంబర్ చెప్పండి.",
+      listening: "🎙️ వింటున్నాను... దయచేసి మీ మొబైల్ నంబర్ చెప్పండి.",
+      youSaid: "మీరు చెప్పినది:",
+      tryAgain: "మళ్లీ ప్రయత్నించండి.",
+      voiceNotSupported: "వాయిస్ గుర్తింపు సపోర్ట్ చేయబడలేదు. Google Chrome ఉపయోగించండి.",
+
+      voiceAskSearch: "మీకు ఏ వైద్య రంగం మరియు ఏ ప్రాంతంలో సహాయం కావాలి? ఉదాహరణకు, చెన్నైలో కార్డియాలజీ అని చెప్పండి.",
+      voicePromptHospital: "సరిపోయే ఆసుపత్రులు అందుబాటులో ఉన్నాయి. ఒక ఎంపికను ఎంచుకోండి.",
+      voiceAskName: "దయచేసి రోగి పూర్తి పేరు నమోదు చేయండి.",
+      voiceAskMobile: "దయచేసి మీ మొబైల్ నంబర్ నమోదు చేయండి.",
+      voiceConfirmed: "మీ అపాయింట్‌మెంట్ ఖరారు అయింది.",
+      voicePostVisit: "వచ్చినందుకు ధన్యవాదాలు ",
+      voiceMedication: "దయచేసి మీ మందులను సరిగ్గా తీసుకోండి.",
+      voiceRecovery: "వైద్యుడిని కలిసిన తర్వాత మీరు ఎలా ఉన్నారు? మంచిగా, మెరుగుపడ్డాను, లేదా చెడుగా అని చెప్పండి.",
+      voiceWorse: "హెచ్చరిక! మీ పరిస్థితి చెడుగా ఉంది. వెంటనే మీ హ్యూమన్ నావిగేటర్‌ను సంప్రదించండి.",
+      voiceGood: "చాలా మంచిది! మీ రికవరీని కొనసాగించండి.",
+      voiceWeekly: "వారపు రెండుసార్లు ఆరోగ్య ప్రశ్న: మీ ఆరోగ్య స్థితి ఇప్పుడు ఎలా ఉంది? మంచిగా, మెరుగుపడ్డాను, లేదా చెడుగా అని చెప్పండి.",
+      voiceSessionEnd: "మీ వారపు సమాధానం నమోదు చేయబడింది. మీ FOR YOU సెషన్ ముగిసింది."
+    }
+  };
+
+  const indianLanguages = ["English", "Hindi", "Tamil", "Telugu", "Malayalam", "Kannada", "Marathi", "Bengali", "Gujarati", "Punjabi", "Odia", "Assamese", "Urdu", "Sanskrit", "Konkani"];
+
+  function sanitizeText(value, maxLength) {
+    const limit = typeof maxLength === "number" ? maxLength : 100;
+    if (typeof value !== "string") return "";
+    return value.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, limit);
+  }
+
+  function safeText(value, fallback, maxLength) {
+    const cleaned = sanitizeText(value, maxLength);
+    return cleaned ? cleaned : fallback;
+  }
+
+  function isValidMobile(value) {
+    return /^[0-9+\-\s]{6,20}$/.test(sanitizeText(value, 20));
+  }
+
+  function safeIndex(value, maxValue) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 0) return 0;
+    return Math.min(Math.floor(number), maxValue);
+  }
+
+  function normalizeHospital(raw, fallbackSpecialty, fallbackLocation, index) {
+    const safeRaw = raw && typeof raw === "object" ? raw : {};
+    const facility = safeRaw.facility && typeof safeRaw.facility === "object" ? safeRaw.facility : {};
+    const nestedLocation = safeRaw.location && typeof safeRaw.location === "object" ? safeRaw.location : {};
+
+    return {
+      id: safeText(safeRaw.id, `hospital-${index}`, 80),
+      name:
+        safeText(safeRaw.name, "", 150) ||
+        safeText(safeRaw.hospitalName, "", 150) ||
+        safeText(facility.name, "", 150) ||
+        `${fallbackLocation} Hospital`,
+      specialty:
+        safeText(safeRaw.specialty, "", 80) ||
+        safeText(safeRaw.department, "", 80) ||
+        fallbackSpecialty,
+      location:
+        safeText(safeRaw.city, "", 80) ||
+        safeText(nestedLocation.city, "", 80) ||
+        fallbackLocation,
+      time: safeText(safeRaw.time, "10:00 AM", 40),
+      date: safeText(safeRaw.date, "Nov 08, 2026", 40),
+      languages: ["English"]
+    };
+  }
+
+  function speak(text, callback) {
+    if (!("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = uiText[appLanguage].code;
+    utterance.rate = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const match = voices.find(v => v.lang.toLowerCase().startsWith(uiText[appLanguage].code.toLowerCase()));
+    if (match) utterance.voice = match;
+
+    if (callback) utterance.onend = callback;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function startVoiceListening(callback, statusElementId) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const statusId = statusElementId || "loginVoiceStatus";
+    const statusBox = document.getElementById(statusId);
+
+    if (!SpeechRecognition) {
+      statusBox.textContent = uiText[appLanguage].voiceNotSupported;
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = uiText[appLanguage].code;
+    recognition.interimResults = false;
+
+    statusBox.textContent = uiText[appLanguage].listening;
+
+    recognition.onresult = e => {
+      const spoken = e.results[0][0].transcript;
+      statusBox.textContent = `${uiText[appLanguage].youSaid} “${spoken}”`;
+      callback(spoken);
+    };
+
+    recognition.onerror = () => {
+      statusBox.textContent = uiText[appLanguage].tryAgain;
+    };
+
+    recognition.start();
+  }
+
+  function stopVoiceAssistant() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  function startLoginVoiceAssistant() {
+    const statusBox = document.getElementById("loginVoiceStatus");
+
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      statusBox.textContent = "Speech recognition is not supported. Please use Google Chrome.";
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      statusBox.textContent = "Microphone access is not available in this browser.";
+      return;
+    }
+
+    statusBox.textContent = "Checking microphone permission...";
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+        stream.getTracks().forEach(track => track.stop());
+
+        statusBox.textContent = "Microphone allowed. Starting voice login...";
+
+        speak("Please say your mobile number.");
+
+        setTimeout(function() {
+          beginLoginRecognition();
+        }, 1200);
+      })
+      .catch(function(error) {
+        statusBox.textContent = "Microphone permission denied or unavailable: " + error.name;
+      });
+  }
+
+  function beginLoginRecognition() {
+    const statusBox = document.getElementById("loginVoiceStatus");
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    statusBox.textContent = "🎙️ Listening... Please say your mobile number.";
+
+    recognition.onresult = function(event) {
+      const spoken = event.results[0][0].transcript;
+      const digits = spoken.replace(/[^0-9]/g, "");
+
+      statusBox.textContent = "You said: " + spoken;
+
+      if (digits.length >= 6) {
+        document.getElementById("loginMobile").value = digits;
+        statusBox.textContent += " | Logging in...";
+        loginUser();
+      } else {
+        statusBox.textContent += " | Please say the number again.";
+        speak("Please say your mobile number again.");
+
+        setTimeout(function() {
+          beginLoginRecognition();
+        }, 1200);
+      }
+    };
+
+    recognition.onerror = function(event) {
+      statusBox.textContent = "Voice error: " + event.error;
+
+      if (event.error === "not-allowed") {
+        statusBox.textContent += " | Allow microphone permission in Chrome site settings.";
+      }
+
+      if (event.error === "no-speech") {
+        statusBox.textContent += " | Please speak louder or closer to the microphone.";
+      }
+    };
+
+    try {
+      recognition.start();
+      statusBox.textContent = "🎙️ Listening... Please say your mobile number.";
+    } catch (error) {
+      statusBox.textContent = "Could not start microphone: " + error.message;
+    }
+  }
+
+  function loginUser() {
+    const mobile = sanitizeText(document.getElementById("loginMobile").value, 20);
+
+    if (!isValidMobile(mobile)) {
+      alert(uiText[appLanguage].invalidMobile);
+      return;
+    }
+
+    loggedInMobile = mobile;
+    document.getElementById("mobile").value = mobile;
+
+    currentStep = "DASHBOARD";
+    goToDashboard();
+
+    speak(uiText[appLanguage].loginSuccess);
+  }
+
+  function logoutUser() {
+    loggedInMobile = "";
+    currentStep = "LOGIN";
+    appEnded = false;
+    showPage("pageLogin");
+  }
+
+  function goToDashboard() {
+    applyDashboardText();
+    currentStep = "DASHBOARD";
+    showPage("pageDashboard");
+  }
+
+  function applyDashboardText() {
+    const text = uiText[appLanguage];
+
+    document.getElementById("dashboardTitle").textContent = text.dashboardTitle;
+    document.getElementById("dashboardWelcomeText").textContent = text.dashboardWelcome;
+
+    document.querySelector(".dashboard-button").innerHTML = `${text.findCare}<br><span style="font-size:13px; font-weight:500; color:#93a4ba;">${text.findCareSub}</span>`;
+    document.querySelectorAll(".dashboard-button")[1].innerHTML = `${text.recovery}<br><span style="font-size:13px; font-weight:500; color:#93a4ba;">${text.recoverySub}</span>`;
+    document.querySelectorAll(".dashboard-button")[2].innerHTML = `${text.weekly}<br><span style="font-size:13px; font-weight:500; color:#93a4ba;">${text.weeklySub}</span>`;
+
+    document.getElementById("logoutButton").textContent = text.logout;
+  }
+
+  function startAppFlow() {
+    if (appEnded) return;
+
+    currentStep = "LANGUAGE";
+    showPage("pageLanguage");
+    applyLanguage();
+
+    speak(uiText[appLanguage].askLanguage);
+
+    setTimeout(function() {
+      startVoiceListening(handleLanguageSpeech, "languageVoiceStatus");
+    }, 1200);
+  }
+
+  function askLanguageByVoice() {
+    if (appEnded) return;
+
+    currentStep = "LANGUAGE";
+
+    speak(uiText[appLanguage].askLanguage);
+
+    setTimeout(function() {
+      startVoiceListening(handleLanguageSpeech, "languageVoiceStatus");
+    }, 1200);
+  }
+
+  function handleLanguageSpeech(spokenText) {
+    if (appEnded) return;
+
+    const text = sanitizeText(spokenText, 100).toLowerCase();
+
+    if (text.includes("tamil") || text.includes("தமிழ்") || text.includes("தமிழ")) {
+      setAppLanguage("tamil");
+    } else if (text.includes("hindi") || text.includes("हिंदी") || text.includes("हिन्दी")) {
+      setAppLanguage("hindi");
+    } else if (text.includes("telugu") || text.includes("తెలుగు")) {
+      setAppLanguage("telugu");
+    } else if (text.includes("english") || text.includes("ஆங்கிலம்") || text.includes("इंग्लिश")) {
+      setAppLanguage("english");
+    } else {
+      speak(uiText[appLanguage].askLanguage);
+
+      setTimeout(function() {
+        startVoiceListening(handleLanguageSpeech, "languageVoiceStatus");
+      }, 1200);
+    }
+  }
+
+  function setAppLanguage(language) {
+    if (appEnded) return;
+
+    if (!uiText[language]) {
+      language = "english";
+    }
+
+    appLanguage = language;
+
+    currentStep = "MODE";
+    showPage("pageMode");
+    applyLanguage();
+
+    speak(uiText[appLanguage].askMode);
+
+    setTimeout(function() {
+      startVoiceListening(handleModeSpeech, "modeVoiceStatus");
+    }, 1200);
+  }
+
+  function askModeByVoice() {
+    if (appEnded) return;
+
+    currentStep = "MODE";
+
+    speak(uiText[appLanguage].askMode);
+
+    setTimeout(function() {
+      startVoiceListening(handleModeSpeech, "modeVoiceStatus");
+    }, 1200);
+  }
+
+  function handleModeSpeech(spokenText) {
+    if (appEnded) return;
+
+    const text = sanitizeText(spokenText, 100).toLowerCase();
+
+    if (
+      text.includes("voice") ||
+      text.includes("voice assistance") ||
+      text.includes("குரல்") ||
+      text.includes("వాయిస్") ||
+      text.includes("वॉइस")
+    ) {
+      setAppMode("voice");
+    } else if (
+      text.includes("manual") ||
+      text.includes("normal") ||
+      text.includes("கைமுறை") ||
+      text.includes("మాన్యువల్") ||
+      text.includes("मैनुअल")
+    ) {
+      setAppMode("manual");
+    } else {
+      speak(uiText[appLanguage].askMode);
+
+      setTimeout(function() {
+        startVoiceListening(handleModeSpeech, "modeVoiceStatus");
+      }, 1200);
+    }
+  }
+
+  function setAppMode(mode) {
+    if (appEnded) return;
+
+    appMode = mode === "voice" ? "voice" : "manual";
+
+    if (appMode === "manual") {
+      stopVoiceAssistant();
+    }
+
+    applyModeButtons();
+    currentStep = "SEARCH";
+    showPage("pageSearch");
+    applyLanguage();
+
+    if (appMode === "voice") {
+      speak(uiText[appLanguage].voiceAskSearch);
+    }
+  }
+
+  function applyModeButtons() {
+    const voiceSearch = document.getElementById("voiceSearchButton");
+    const speakRecovery = document.getElementById("speakRecoveryButton");
+    const speakWeekly = document.getElementById("speakWeeklyButton");
+
+    if (appMode === "voice") {
+      voiceSearch.classList.remove("hidden");
+      speakRecovery.classList.remove("hidden");
+      speakWeekly.classList.remove("hidden");
+    } else {
+      voiceSearch.classList.add("hidden");
+      speakRecovery.classList.add("hidden");
+      speakWeekly.classList.add("hidden");
+    }
+  }
+
+  function applyLanguage() {
+    const text = uiText[appLanguage];
+
+    document.getElementById("welcomeTitle").textContent = text.welcomeTitle;
+    document.getElementById("languageInstruction").textContent = text.languageInstruction;
+    document.getElementById("modeTitle").textContent = text.modeTitle;
+    document.getElementById("modeInstruction").textContent = text.modeInstruction;
+
+    document.querySelector(".voice-btn").textContent = text.speakLanguageButton;
+    document.querySelectorAll(".voice-btn")[1].textContent = text.speakModeButton;
+
+    document.querySelector(".choice-button").innerHTML = text.voiceMode;
+    document.querySelectorAll(".choice-button")[1].innerHTML = text.manualMode;
+
+    document.getElementById("findCareTitle").textContent = text.findCareTitle;
+    document.getElementById("needLabel").textContent = text.needLabel;
+    document.getElementById("locationLabel").textContent = text.locationLabel;
+    document.getElementById("doctorLanguageLabel").textContent = text.doctorLanguageLabel;
+    document.getElementById("searchButton").textContent = text.searchButton;
+    document.getElementById("voiceSearchButton").textContent = text.voiceSearchButton;
+
+    document.getElementById("hospitalsTitle").textContent = text.hospitalsTitle;
+    document.getElementById("bookingTitle").textContent = text.bookingTitle;
+    document.getElementById("patientNameLabel").textContent = text.patientNameLabel;
+    document.getElementById("patientName").placeholder = text.patientNamePlaceholder;
+    document.getElementById("mobileLabel").textContent = text.mobileLabel;
+    document.getElementById("mobile").placeholder = text.mobilePlaceholder;
+    document.getElementById("confirmBookingButton").textContent = text.confirmBookingButton;
+
+    document.getElementById("confirmedTitle").textContent = text.confirmedTitle;
+    document.getElementById("documentReminderTitle").textContent = text.documentReminderTitle;
+    document.getElementById("documentReminderText").textContent = text.documentReminderText;
+    document.getElementById("finishConsultationButton").textContent = text.finishConsultationButton;
+
+    document.getElementById("thankYouTitle").textContent = text.thankYouTitle;
+    document.getElementById("medicationTitle").textContent = text.medicationTitle;
+    document.getElementById("medicationText").textContent = text.medicationText;
+    document.getElementById("recoveryButton").textContent = text.recoveryButton;
+
+    document.getElementById("recoveryTitle").textContent = text.recoveryTitle;
+    document.getElementById("recoveryPromptText").textContent = text.recoveryPrompt;
+    document.getElementById("goodButton").textContent = text.goodButton;
+    document.getElementById("worseButton").textContent = text.worseButton;
+    document.getElementById("speakRecoveryButton").textContent = text.speakRecoveryButton;
+    document.getElementById("weeklyNextButton").textContent = text.weeklyNext;
+
+    document.getElementById("weeklyTitle").textContent = text.weeklyTitle;
+    document.getElementById("weeklyPromptText").textContent = text.weeklyPrompt;
+    document.getElementById("weeklyGoodButton").textContent = text.weeklyGood;
+    document.getElementById("weeklyWorseButton").textContent = text.weeklyWorse;
+    document.getElementById("speakWeeklyButton").textContent = text.speakWeekly;
+
+    document.getElementById("weeklyEndTitle").textContent = text.sessionEnded;
+    document.getElementById("weeklyEndText").textContent = text.sessionEndedText;
+
+    document.documentElement.lang = text.code;
+  }
+
+  function startVoiceSearch() {
+    if (appEnded || appMode !== "voice") return;
+    startVoiceListening(handleSearchSpeech, "loginVoiceStatus");
+  }
+
+  function handleSearchSpeech(spoken) {
+    if (appEnded) return;
+
+    const text = sanitizeText(spoken, 250).toLowerCase();
+    let specialty = "Cardiology";
+    let location = "Chennai";
+
+    if (text.includes("cardio") || text.includes("heart") || text.includes("இருதய") || text.includes("గుండె") || text.includes("हृदय")) specialty = "Cardiology";
+    else if (text.includes("ortho") || text.includes("bone") || text.includes("எலும்பு") || text.includes("ఎముక") || text.includes("हड्डी")) specialty = "Orthopedics";
+    else if (text.includes("ent") || text.includes("ear") || text.includes("காது") || text.includes("చెవి") || text.includes("कान")) specialty = "ENT";
+    else if (text.includes("gyn") || text.includes("women") || text.includes("பெண்கள்") || text.includes("స్త్రీ") || text.includes("महिला")) specialty = "Gynecology";
+
+    if (text.includes("coimbatore") || text.includes("கோயம்புத்தூர்") || text.includes("కోయంబట్టూర్") || text.includes("कोयंबटूर")) location = "Coimbatore";
+    else if (text.includes("trichy") || text.includes("திருச்சி") || text.includes("త్రిచీ") || text.includes("त्रिची")) location = "Trichy";
+    else if (text.includes("tirunelveli") || text.includes("திருநெల்வேలி") || text.includes("తిరునెల్వేలి") || text.includes("तिरुनेलवेली")) location = "Tirunelveli";
+    else if (text.includes("puducherry") || text.includes("pondicherry") || text.includes("புதுச்சேరி") || text.includes("పుదుచ్చేరి") || text.includes("पुदुचेरी")) location = "Puducherry";
+    else if (text.includes("chennai") || text.includes("சென்னை") || text.includes("చెన్నై") || text.includes("चेन्नई")) location = "Chennai";
+
+    document.getElementById("need").value = specialty;
+    document.getElementById("location").value = location;
+    executeHospitalSearch(specialty, location);
+  }
+
+  function performSearch() {
+    if (appEnded) return;
+    executeHospitalSearch(document.getElementById("need").value, document.getElementById("location").value);
+  }
+
+  function getLanguages(location, index) {
+    const list = ["English", indianLanguages[(index + 2) % indianLanguages.length], indianLanguages[(index + 5) % indianLanguages.length]];
+
+    if (location === "Chennai") list.push("Tamil");
+    if (location === "Coimbatore") list.push("Tamil", "Malayalam");
+    if (location === "Trichy") list.push("Tamil");
+    if (location === "Tirunelveli") list.push("Tamil", "Malayalam");
+    if (location === "Puducherry") list.push("Tamil", "Telugu");
+
+    return [...new Set(list)];
+  }
+
+  function executeHospitalSearch(specialty, location) {
+    if (appEnded) return;
+
+    const container = document.getElementById("hospitalResultsContainer");
+    container.innerHTML = `<p class="loading-text">${uiText[appLanguage].searching}</p>`;
+
+    currentStep = "HOSPITAL_LIST";
+    showPage("pageHospitals");
+
+    setTimeout(() => {
+      const rawHospitals = [
+        { id: 1, name: `${location} Central ${specialty} Clinic`, specialty, city: location, time: "10:00 AM", date: "Nov 08, 2026" },
+        { id: 2, name: `Apollo Speciality ${specialty} — ${location}`, specialty, city: location, time: "11:30 AM", date: "Nov 08, 2026" },
+        { id: 3, name: `City Lifeline ${specialty} Care — ${location}`, specialty, city: location, time: "02:00 PM", date: "Nov 09, 2026" }
+      ];
+
+      hospitalsList = rawHospitals.map((raw, index) => {
+        const hospital = normalizeHospital(raw, specialty, location, index);
+        hospital.languages = getLanguages(hospital.location, index);
+        return hospital;
+      });
+
+      const text = uiText[appLanguage];
+      container.innerHTML = "";
+
+      hospitalsList.forEach((hospital, index) => {
+        const badges = hospital.languages.map(l => `<span class="badge">${l}</span>`).join(" ");
+
+        container.innerHTML += `
+          <div class="hospital-card">
+            <h3>${text.option} ${index + 1}: ${hospital.name}</h3>
+            <p class="hospital-meta">📅 ${text.dateLabel}: ${hospital.date} | ⏰ ${text.timeLabel}: ${hospital.time}</p>
+            <p><strong>${text.languageSupportLabel}:</strong><br>${badges}</p>
+            <button class="secondary" onclick="selectHospitalIndex(${index})">${text.selectHospital}: ${hospital.name}</button>
+          </div>
+        `;
+      });
+
+      if (appMode === "voice") {
+        speak(text.voicePromptHospital);
+      }
+    }, 250);
+  }
+
+  function selectHospitalIndex(index) {
+    if (appEnded) return;
+
+    selectedHospital = hospitalsList[safeIndex(index, hospitalsList.length - 1)] || hospitalsList[0];
+    if (!selectedHospital) return;
+
+    const text = uiText[appLanguage];
+    document.getElementById("slotDetailsText").textContent = `${text.slotLabel}: ${selectedHospital.date}, ${selectedHospital.time}`;
+
+    currentStep = "BOOKING";
+    showPage("pageBooking");
+
+    if (appMode === "voice") {
+      speak(text.voiceAskName);
+    }
+  }
+
+  function confirmAppointment() {
+    if (appEnded) return;
+
+    const name = safeText(document.getElementById("patientName").value, "Patient", 100);
+    const mobile = sanitizeText(document.getElementById("mobile").value, 20);
+
+    if (!isValidMobile(mobile)) {
+      alert(uiText[appLanguage].invalidMobile);
+      return;
+    }
+
+    const text = uiText[appLanguage];
+    const hospitalName = selectedHospital ? safeText(selectedHospital.name, "Hospital", 150) : "Hospital";
+    const slot = selectedHospital ? `${selectedHospital.date}, ${selectedHospital.time}` : "";
+
+    document.getElementById("confirmedDetailsText").innerHTML =
+      `<strong>${text.patientLabel}:</strong> ${name}<br>` +
+      `<strong>${text.hospitalLabel}:</strong> ${hospitalName}<br>` +
+      `<strong>${text.slotLabel}:</strong> ${slot}<br>` +
+      `<strong>${text.languageSupportLabel}:</strong> ${selectedHospital.languages.join(", ")}`;
+
+    currentStep = "CONFIRMATION";
+    showPage("pageConfirmation");
+
+    if (appMode === "voice") {
+      speak(`${text.voiceConfirmed} ${text.hospitalLabel}: ${hospitalName}.`);
+    }
+  }
+
+  function simulateDoctorVisitCompleted() {
+    if (appEnded) return;
+
+    const text = uiText[appLanguage];
+    const hospitalName = selectedHospital ? selectedHospital.name : "Hospital";
+
+    document.getElementById("visitedHospitalNameDisplay").textContent = hospitalName;
+    currentStep = "POST_CONSULTATION";
+    showPage("pagePostConsultation");
+
+    if (appMode === "voice") {
+      speak(`${text.voicePostVisit} ${hospitalName}. ${text.voiceMedication}`);
+    }
+  }
+
+  function goToRecoveryPage() {
+    if (appEnded) return;
+
+    currentStep = "RECOVERY";
+    showPage("pageRecovery");
+
+    if (appMode === "voice") {
+      speak(uiText[appLanguage].voiceRecovery);
+    }
+  }
+
+  function startVoiceInputForRecovery() {
+    if (appEnded || appMode !== "voice") return;
+
+    startVoiceListening(spoken => {
+      const text = sanitizeText(spoken, 100).toLowerCase();
+      const worseWords = ["worse", "bad", "மோசம்", "చెడు", "बदतर", "खराब"];
+      handleRecoveryAnswer(worseWords.some(w => text.includes(w)) ? "worse" : "good");
+    }, "loginVoiceStatus");
+  }
+
+  function handleRecoveryAnswer(status) {
+    if (appEnded) return;
+
+    const safeStatus = status === "worse" ? "worse" : "good";
+    const text = uiText[appLanguage];
+    const box = document.getElementById("recoveryResultContainer");
+
+    box.classList.remove("hidden");
+    box.innerHTML = safeStatus === "worse"
+      ? `<div class="warning-box"><h3>${text.criticalAlert}</h3><p>${text.voiceWorse}</p><button class="blink-navigator" onclick="triggerHumanNavigatorEmergency()">${text.contactNavigator}</button></div>`
+      : `<div class="success-box"><p style="font-weight:bold;color:#4ade80;margin:0;">${text.voiceGood}</p></div>`;
+
+    document.getElementById("weeklyNextButton").classList.remove("hidden");
+
+    if (appMode === "voice") {
+      speak(safeStatus === "worse" ? text.voiceWorse : text.voiceGood);
+    }
+  }
+
+  function goToWeeklyPage() {
+    if (appEnded) return;
+
+    currentStep = "WEEKLY";
+    showPage("pageWeekly");
+
+    if (appMode === "voice") {
+      speak(uiText[appLanguage].voiceWeekly);
+    }
+  }
+
+  function startVoiceInputForWeekly() {
+    if (appEnded || appMode !== "voice") return;
+
+    startVoiceListening(spoken => {
+      const text = sanitizeText(spoken, 100).toLowerCase();
+      const worseWords = ["worse", "bad", "மோசம்", "చెడు", "बदतर", "खराब"];
+      handleWeeklyAnswer(worseWords.some(w => text.includes(w)) ? "worse" : "good");
+    }, "loginVoiceStatus");
+  }
+
+  function handleWeeklyAnswer(status) {
+    if (appEnded) return;
+
+    const safeStatus = status === "worse" ? "worse" : "good";
+    const text = uiText[appLanguage];
+    const box = document.getElementById("weeklyResultContainer");
+
+    box.classList.remove("hidden");
+    box.innerHTML = safeStatus === "worse"
+      ? `<div class="warning-box"><h3>${text.criticalAlert}</h3><p>${text.weeklyWorseResponse}</p><button class="blink-navigator" onclick="triggerHumanNavigatorEmergency()">${text.contactNavigator}</button></div>`
+      : `<div class="success-box"><p style="font-weight:bold;color:#4ade80;margin:0;">${text.weeklyGoodResponse}</p></div>`;
+
+    document.getElementById("weeklyEndContainer").classList.remove("hidden");
+
+    appEnded = true;
+    stopVoiceAssistant();
+
+    speak(`${safeStatus === "worse" ? text.weeklyWorseResponse : text.weeklyGoodResponse} ${text.voiceSessionEnd}`);
+  }
+
+  function triggerHumanNavigatorEmergency() {
+    alert("Connecting you immediately with your Human Navigator...");
+
+    if (appMode === "voice") {
+      speak("Connecting you with your Human Navigator now.");
+    }
+  }
+
+  function showPage(pageId) {
+    ["pageLogin", "pageDashboard", "pageLanguage", "pageMode", "pageSearch", "pageHospitals", "pageBooking", "pageConfirmation", "pagePostConsultation", "pageRecovery", "pageWeekly"]
+      .forEach(id => document.getElementById(id).classList.add("hidden"));
+
+    document.getElementById(pageId).classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+
+  window.onload = function() {
+    currentStep = "LOGIN";
+    showPage("pageLogin");
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+    }
+  };
+</script>
+
+</body>
+</html>
