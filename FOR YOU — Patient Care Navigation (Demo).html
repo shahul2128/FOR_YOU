@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOR YOU — Patient Care Navigation (Demo)</title>
+<style>
+  * { box-sizing: border-box; font-family: "Inter", "Segoe UI", Roboto, Arial, "Noto Sans Tamil", "Noto Sans Devanagari", "Noto Sans Telugu", sans-serif; }
+  body { margin: 0; background: #0b1220; color: #e8eef7; }
+  .app-shell { max-width: 560px; margin: 0 auto; min-height: 100vh; background: #0b1220; padding-bottom: 40px; }
+
+  .topbar { background: #101a2d; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid #1d2b44; position: sticky; top: 0; z-index: 10; }
+  .brand-name { font-size: 20px; font-weight: 800; color: #4da3ff; }
+
+  .tracker { display: flex; gap: 6px; padding: 12px 16px 0; overflow-x: auto; }
+  .step { flex: 1 0 auto; font-size: 11px; font-weight: 700; padding: 7px 8px; border-radius: 999px; text-align: center; background: #111c30; border: 1px solid #1d2b44; color: #6f8199; white-space: nowrap; }
+  .step.done { color: #7fe0a6; border-color: #23533a; background: #0f2b1e; }
+  .step.current { color: #fff; border-color: #38a1ff; background: #142741; }
+
+  .box { background: #111c30; margin: 16px; padding: 24px; border-radius: 20px; border: 1px solid #1d2b44; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+  h2 { margin: 0 0 10px; font-size: 22px; color: #fff; }
+  h3 { margin: 0 0 8px; color: #fff; font-size: 17px; }
+  p { line-height: 1.55; color: #b8c4d4; margin: 0 0 8px; }
+  label { display: block; margin-top: 14px; font-size: 14px; color: #9fb2c9; font-weight: 600; }
+  .hint { font-size: 13px; color: #8fa3bb; }
+
+  button { width: 100%; padding: 14px; margin-top: 12px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, #1668d6, #38a1ff); color: #fff; transition: .18s ease; }
+  button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(56,161,255,.25); }
+  button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+  button.secondary { background: #16233b; color: #cfe3ff; border: 1px solid #26395a; }
+  button.secondary:hover { background: #1b2c48; }
+  button.voice-btn { background: linear-gradient(135deg, #7b2ff7, #38a1ff); }
+  button.danger { background: linear-gradient(135deg, #d92121, #ff5252); font-size: 14px; width: auto; padding: 9px 14px; margin: 0; white-space: nowrap; }
+  button.small { width: auto; padding: 10px 14px; margin-top: 8px; font-size: 14px; }
+  button.warn { background: linear-gradient(135deg, #d92121, #ff5252); }
+
+  select, input { width: 100%; padding: 13px; margin-top: 6px; border: 1px solid #26395a; border-radius: 12px; font-size: 15px; background: #0d1729; color: #e8eef7; outline: none; }
+  select:focus, input:focus { border-color: #38a1ff; box-shadow: 0 0 0 3px rgba(56,161,255,.18); }
+  .check-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 15px; color: #cfe3ff; }
+  .check-row input { width: 20px; height: 20px; margin: 0; }
+
+  .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .choice-button { padding: 22px 12px; margin: 0; border-radius: 18px; background: #16233b; border: 1px solid #26395a; color: #cfe3ff; font-size: 16px; font-weight: 800; }
+  .choice-button:hover { border-color: #38a1ff; background: #1b2c48; }
+
+  .dash-grid { display: grid; gap: 12px; margin-top: 16px; }
+  .dash-button { padding: 20px 18px; margin: 0; border-radius: 18px; background: #16233b; border: 1px solid #26395a; color: #cfe3ff; font-size: 17px; font-weight: 800; text-align: left; }
+  .dash-button small { display: block; font-size: 13px; font-weight: 500; color: #93a4ba; margin-top: 4px; }
+
+  .hospital-card { background: #0d1729; border: 1px solid #22334f; border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  .hospital-meta { font-size: 14px; color: #93a4ba; margin: 4px 0 8px; }
+  .why { font-size: 13px; color: #b8d6f5; background: #0f2338; border-radius: 10px; padding: 10px; margin: 8px 0; }
+  .badge { display: inline-block; background: #142741; color: #7fc0ff; padding: 5px 10px; border-radius: 999px; margin: 4px 4px 0 0; font-size: 12px; font-weight: 700; border: 1px solid #23405f; }
+  .demo-tag { display: inline-block; background: #3a2a10; color: #ffcc66; border: 1px solid #6b4f1c; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: .5px; }
+  .slot-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .slot-row button { width: auto; flex: 1 1 45%; margin: 0; padding: 12px 8px; font-size: 14px; }
+
+  .success-box { background: #0f2b1e; border-left: 5px solid #2e9e5b; padding: 16px; border-radius: 12px; margin-bottom: 14px; }
+  .info-box { background: #0f2338; border-left: 5px solid #38a1ff; padding: 16px; border-radius: 12px; margin-bottom: 14px; }
+  .warning-box { background: #331418; border-left: 5px solid #ff5252; padding: 16px; border-radius: 12px; margin-bottom: 14px; }
+  .docs-item { display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: #0d1729; border: 1px solid #22334f; border-radius: 12px; margin-top: 8px; font-size: 15px; color: #cfe3ff; }
+  .docs-item input { width: 20px; height: 20px; margin: 2px 0 0; flex-shrink: 0; }
+
+  .voice-status { margin-top: 12px; padding: 12px; border-radius: 12px; background: #0d1729; border: 1px solid #26395a; font-size: 14px; color: #9fd0ff; min-height: 20px; }
+  .demo-footer { text-align: center; font-size: 12px; color: #6f8199; margin: 20px 16px 0; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+  .overlay-card { background: #111c30; border: 1px solid #ff5252; border-radius: 18px; padding: 24px; max-width: 420px; width: 100%; }
+
+  .hidden { display: none !important; }
+  .row { display: flex; gap: 10px; }
+  .row > button { margin-top: 12px; }
+  .row > button:first-child:not(:last-child) { margin-right: 0; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="topbar">
+    <div class="brand-name">FOR YOU</div>
+    <button class="danger" type="button" id="navBtn">🚨 Human Navigator</button>
+  </header>
+
+  <nav class="tracker hidden" id="tracker" aria-label="Journey progress"></nav>
+
+  <!-- LOGIN -->
+  <section id="pageLogin" class="box page">
+    <h2 data-i18n="loginTitle">Login to FOR YOU</h2>
+    <p data-i18n="loginSub">Enter your mobile number to continue.</p>
+    <label for="loginMobile" data-i18n="mobileLabel">Mobile Number</label>
+    <input id="loginMobile" inputmode="tel" data-i18n-ph="mobilePh" placeholder="Enter mobile number">
+    <button type="button" id="loginBtn" data-i18n="login">Login</button>
+    <button type="button" class="voice-btn" id="loginVoiceBtn" data-i18n="speakLogin">🎤 Speak mobile number</button>
+    <div id="loginVoiceStatus" class="voice-status"></div>
+    <p class="hint" style="margin-top:14px;" data-i18n="demoNote">Demo login: enter any valid mobile number. No real data is stored.</p>
+  </section>
+
+  <!-- LANGUAGE -->
+  <section id="pageLang" class="box page hidden">
+    <h2 data-i18n="langTitle">Choose your language</h2>
+    <p data-i18n="langSub">Voice prompts will use this language.</p>
+    <button type="button" class="secondary" data-lang="en">English</button>
+    <button type="button" class="secondary" data-lang="ta">தமிழ்</button>
+    <button type="button" class="secondary" data-lang="hi">हिन्दी</button>
+    <button type="button" class="secondary" data-lang="te">తెలుగు</button>
+    <button type="button" class="voice-btn" id="langVoiceBtn" data-i18n="speakLang">🎤 Speak language</button>
+    <div id="langVoiceStatus" class="voice-status"></div>
+  </section>
+
+  <!-- MODE -->
+  <section id="pageMode" class="box page hidden">
+    <h2 data-i18n="modeTitle">How would you like to use FOR YOU?</h2>
+    <p data-i18n="modeSub">Choose an option, or speak it.</p>
+    <div class="choice-grid">
+      <button type="button" class="choice-button" data-mode="voice" data-i18n-html="voiceMode">🎤<br>Voice assistance</button>
+      <button type="button" class="choice-button" data-mode="manual" data-i18n-html="manualMode">✋<br>Manual method</button>
+    </div>
+    <button type="button" class="voice-btn" id="modeVoiceBtn" data-i18n="speakMode">🎤 Speak choice</button>
+    <div id="modeVoiceStatus" class="voice-status"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="pageDash" class="box page hidden">
+    <h2 data-i18n="dashTitle">What would you like to do today?</h2>
+    <p class="hint" id="dashWelcome"></p>
+    <div class="dash-grid">
+      <button type="button" class="dash-button" data-go="pageFind"><span data-i18n="dashFind">🏥 Find Care</span><small data-i18n="dashFindSub">Find hospital options and book a demo slot</small></button>
+      <button type="button" class="dash-button" data-go="pageRecovery" data-enter="recovery"><span data-i18n="dashRecovery">💊 Recovery Check-In</span><small data-i18n="dashRecoverySub">Report how you feel after your visit</small></button>
+      <button type="button" class="dash-button" data-go="pageWeekly" data-enter="weekly"><span data-i18n="dashWeekly">📅 Weekly Health Reminder</span><small data-i18n="dashWeeklySub">Check your health condition twice weekly</small></button>
+      <button type="button" class="dash-button" data-go="pageFollow" data-enter="follow"><span data-i18n="dashFollow">📋 Follow-up Steps</span><small data-i18n="dashFollowSub">Administrative next steps after your visit</small></button>
+    </div>
+    <button type="button" class="secondary" id="logoutBtn" data-i18n="logout">Logout</button>
+  </section>
+
+  <!-- FIND CARE -->
+  <section id="pageFind" class="box page hidden">
+    <h2 data-i18n="findTitle">Find Care</h2>
+    <label for="service" data-i18n="serviceLabel">Service needed</label>
+    <select id="service">
+      <option value="Cardiology">Cardiology — Heart</option>
+      <option value="Orthopedics">Orthopedics — Bones & Joints</option>
+      <option value="ENT">ENT — Ear, Nose, Throat</option>
+      <option value="Gynecology">Gynecology — Women's Health</option>
+    </select>
+    <label for="city" data-i18n="cityLabel">Your city</label>
+    <select id="city">
+      <option>Chennai</option><option>Coimbatore</option><option>Trichy</option><option>Tirunelveli</option><option>Puducherry</option>
+    </select>
+    <label for="docLang" data-i18n="docLangLabel">Preferred doctor language (optional)</label>
+    <select id="docLang">
+      <option value="Any" data-i18n="anyLang">Any language</option>
+      <option>English</option><option>Tamil</option><option>Hindi</option><option>Telugu</option><option>Malayalam</option><option>Kannada</option>
+    </select>
+    <div class="check-row"><input type="checkbox" id="wheelchair"><label for="wheelchair" style="margin:0;color:#cfe3ff;font-weight:600;" data-i18n="wheelLabel">I need wheelchair access</label></div>
+    <label data-i18n="referralLabel">Do you have a referral letter from a doctor?</label>
+    <div class="row">
+      <button type="button" class="secondary" id="refYes" data-i18n="yes">Yes</button>
+      <button type="button" class="secondary" id="refNo" data-i18n="no">No</button>
+    </div>
+    <p class="hint" id="refStatus" style="margin-top:8px;"></p>
+    <button type="button" id="findBtn" data-i18n="findBtn">Find Feasible Options</button>
+    <button type="button" class="voice-btn voice-only hidden" id="searchVoiceBtn" data-i18n="speakSearch">🎤 Speak search details</button>
+    <div id="searchVoiceStatus" class="voice-status hidden"></div>
+    <button type="button" class="secondary" data-go="pageDash" data-i18n="back">← Back to dashboard</button>
+  </section>
+
+  <!-- HOSPITALS -->
+  <section id="pageHospitals" class="box page hidden">
+    <h2 data-i18n="hospTitle">Recommended hospitals</h2>
+    <p class="hint" data-i18n="demoNoteHosp">All hospitals, distances, languages, and slots below are DEMO DATA. Do not use them for real bookings.</p>
+    <div id="hospitalList" style="margin-top:12px;"></div>
+    <button type="button" class="secondary" data-go="pageFind" data-i18n="back">← Back</button>
+  </section>
+
+  <!-- BOOKING -->
+  <section id="pageBooking" class="box page hidden">
+    <h2 data-i18n="bookTitle">Confirm patient details</h2>
+    <div class="info-box" id="slotSummary"></div>
+    <label for="patientName" data-i18n="nameLabel">Patient name</label>
+    <input id="patientName" data-i18n-ph="namePh" placeholder="Enter full name">
+    <label for="bookMobile" data-i18n="mobileLabel">Mobile number</label>
+    <input id="bookMobile" inputmode="tel" data-i18n-ph="mobilePh" placeholder="Enter mobile number">
+    <button type="button" class="voice-btn voice-only hidden" id="nameVoiceBtn" data-i18n="speakName">🎤 Speak patient name</button>
+    <div id="nameVoiceStatus" class="voice-status hidden"></div>
+    <button type="button" id="bookBtn" data-i18n="confirmBtn">Confirm appointment (demo)</button>
+    <button type="button" class="secondary" data-go="pageHospitals" data-i18n="back">← Back</button>
+  </section>
+
+  <!-- DOCUMENTS -->
+  <section id="pageDocs" class="box page hidden">
+    <h2 data-i18n="docsTitle">Document checklist</h2>
+    <p data-i18n="docsSub">Tick each item you have ready. This list depends on your referral status.</p>
+    <div id="docsList"></div>
+    <button type="button" id="docsDoneBtn" data-i18n="docsDone">Continue to appointment</button>
+  </section>
+
+  <!-- CONFIRMATION -->
+  <section id="pageConfirm" class="box page hidden">
+    <div class="success-box">
+      <h2 data-i18n="confTitle">Appointment confirmed (DEMO)</h2>
+      <div id="confDetails"></div>
+    </div>
+    <div class="info-box">
+      <h3 data-i18n="confNextTitle">Next step: attend your visit</h3>
+      <p data-i18n="confNext">Arrive a little early with your checklist documents. Ask the reception desk if you need help finding the department.</p>
+    </div>
+    <button type="button" id="finishVisitBtn" data-i18n="finishBtn">✅ Finish visit (demo)</button>
+  </section>
+
+  <!-- POST VISIT -->
+  <section id="pagePostVisit" class="box page hidden">
+    <div class="success-box">
+      <h2 data-i18n="postTitle">Thank you for visiting</h2>
+      <h3 id="visitedName" style="color:#7fc0ff;"></h3>
+    </div>
+    <div class="info-box">
+      <h3 data-i18n="medTitle">💊 Medication guidance</h3>
+      <p data-i18n="medText">Follow the medication instructions your doctor gave you. If you are unsure, ask your doctor or pharmacist.</p>
+    </div>
+    <button type="button" data-go="pageRecovery" data-enter="recovery" data-i18n="toRecovery">Go to Recovery Check-In</button>
+    <button type="button" class="secondary" data-go="pageFollow" data-enter="follow" data-i18n="toFollow">Go to Follow-up Steps</button>
+  </section>
+
+  <!-- RECOVERY -->
+  <section id="pageRecovery" class="box page hidden">
+    <h2 data-i18n="recTitle">Recovery Check-In</h2>
+    <p data-i18n="recQ">How are you feeling after your visit?</p>
+    <div class="row">
+      <button type="button" class="secondary" data-rec="good" data-i18n="good">Good / Better</button>
+      <button type="button" class="secondary" data-rec="worse" style="border-color:#ff5252;color:#ff8080;" data-i18n="worse">Worse</button>
+    </div>
+    <button type="button" class="voice-btn voice-only hidden" id="recVoiceBtn" data-i18n="speakRec">🎤 Speak answer</button>
+    <div id="recResult" class="hidden" style="margin-top:14px;"></div>
+    <button type="button" class="secondary" data-go="pageDash" data-i18n="back">← Back to dashboard</button>
+  </section>
+
+  <!-- WEEKLY -->
+  <section id="pageWeekly" class="box page hidden">
+    <h2 data-i18n="weekTitle">📅 Weekly Health Reminder</h2>
+    <p data-i18n="weekQ">This is your twice-weekly check-in. How is your health condition now?</p>
+    <div class="row">
+      <button type="button" class="secondary" data-week="good" data-i18n="good">Good / Better</button>
+      <button type="button" class="secondary" data-week="worse" style="border-color:#ff5252;color:#ff8080;" data-i18n="worse">Worse</button>
+    </div>
+    <button type="button" class="voice-btn voice-only hidden" id="weekVoiceBtn" data-i18n="speakWeek">🎤 Speak answer</button>
+    <div id="weekResult" class="hidden" style="margin-top:14px;"></div>
+    <button type="button" class="secondary" data-go="pageDash" data-i18n="back">← Back to dashboard</button>
+  </section>
+
+  <!-- FOLLOW-UP -->
+  <section id="pageFollow" class="box page hidden">
+    <h2 data-i18n="followTitle">Follow-up steps</h2>
+    <p class="hint" data-i18n="followSub">Administrative reminders only. This is not medical advice.</p>
+    <div id="followList" style="margin-top:12px;"></div>
+    <button type="button" class="secondary" data-go="pageDash" data-i18n="back">← Back to dashboard</button>
+  </section>
+
+  <p class="demo-footer" data-i18n="footer">FOR YOU prototype. Hospitals, slots, and availability are simulated DEMO DATA. Not medical advice. In an emergency, call your local emergency number.</p>
+</div>
+
+<!-- Human Navigator overlay -->
+<div class="overlay hidden" id="navOverlay">
+  <div class="overlay-card">
+    <h2 data-i18n="navTitle">🚨 Human Navigator</h2>
+    <p data-i18n="navBody">A Human Navigator has been notified (DEMO). In a medical emergency, contact your local emergency number immediately.</p>
+    <button type="button" class="warn" id="navClose" data-i18n="close">Close</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Translations (voice + key labels; missing keys fall back to English) ---------- */
+  const T = {
+    en: {
+      code: "en-IN", loginTitle: "Login to FOR YOU", loginSub: "Enter your mobile number to continue.", mobileLabel: "Mobile number", mobilePh: "Enter mobile number",
+      login: "Login", speakLogin: "🎤 Speak mobile number", demoNote: "Demo login: enter any valid mobile number. No real data is stored.",
+      langTitle: "Choose your language", langSub: "Voice prompts will use this language.", speakLang: "🎤 Speak language",
+      modeTitle: "How would you like to use FOR YOU?", modeSub: "Choose an option, or speak it.", speakMode: "🎤 Speak choice",
+      voiceMode: "🎤<br>Voice assistance", manualMode: "✋<br>Manual method",
+      dashTitle: "What would you like to do today?", dashWelcome: "Welcome. Your journey progress is shown at the top.",
+      dashFind: "🏥 Find Care", dashFindSub: "Find hospital options and book a demo slot",
+      dashRecovery: "💊 Recovery Check-In", dashRecoverySub: "Report how you feel after your visit",
+      dashWeekly: "📅 Weekly Health Reminder", dashWeeklySub: "Check your health condition twice weekly",
+      dashFollow: "📋 Follow-up Steps", dashFollowSub: "Administrative next steps after your visit",
+      logout: "Logout", back: "← Back",
+      findTitle: "Find Care", serviceLabel: "Service needed", cityLabel: "Your city", docLangLabel: "Preferred doctor language (optional)", anyLang: "Any language",
+      wheelLabel: "I need wheelchair access", referralLabel: "Do you have a referral letter from a doctor?", yes: "Yes", no: "No",
+      refHave: "Referral letter: yes. The document checklist will include it.", refNone: "Referral letter: no. You can still book; some hospitals may ask for one.",
+      findBtn: "Find Feasible Options", speakSearch: "🎤 Speak search details",
+      hospTitle: "Recommended hospitals", demoNoteHosp: "All hospitals, distances, languages, and slots below are DEMO DATA. Do not use them for real bookings.",
+      demoTag: "DEMO DATA", distance: "km away", wheelYes: "Wheelchair access", wheelNo: "No wheelchair access listed", languagesLabel: "Languages", why: "Why recommended", selectSlot: "Select this slot",
+      bookTitle: "Confirm patient details", nameLabel: "Patient name", namePh: "Enter full name", confirmBtn: "Confirm appointment (demo)", speakName: "🎤 Speak patient name",
+      docsTitle: "Document checklist", docsSub: "Tick each item you have ready. This list depends on your referral status.", docsDone: "Continue to appointment",
+      docGovt: "Government ID proof", docReports: "Previous medical reports", docRx: "Prescription slips", docRef: "Referral letter", docPay: "Insurance or payment details (if applicable)",
+      confTitle: "Appointment confirmed (DEMO)", confNextTitle: "Next step: attend your visit", confNext: "Arrive a little early with your checklist documents. Ask the reception desk if you need help finding the department.",
+      finishBtn: "✅ Finish visit (demo)", postTitle: "Thank you for visiting", medTitle: "💊 Medication guidance", medText: "Follow the medication instructions your doctor gave you. If you are unsure, ask your doctor or pharmacist.",
+      toRecovery: "Go to Recovery Check-In", toFollow: "Go to Follow-up Steps",
+      recTitle: "Recovery Check-In", recQ: "How are you feeling after your visit?", good: "Good / Better", worse: "Worse", speakRec: "🎤 Speak answer", speakWeek: "🎤 Speak answer",
+      recGood: "Thank you. We are glad to hear it. Keep following your care plan.",
+      recWorse: "You said you feel worse. Please contact your Human Navigator now. If you feel seriously unwell, call your local emergency number.",
+      weekTitle: "📅 Weekly Health Reminder", weekQ: "This is your twice-weekly check-in. How is your health condition now?",
+      weekGood: "Thank you. Your weekly answer has been recorded (DEMO).", weekWorse: "Your answer shows your condition is worse. Please contact your Human Navigator now. In an emergency, call your local emergency number.",
+      followTitle: "Follow-up steps", followSub: "Administrative reminders only. This is not medical advice.",
+      followItems: ["Keep your appointment slip with you.", "Collect any visit summary or reports from the reception desk.", "Ask reception whether a follow-up appointment is needed and how to book it.", "Keep your documents together for future visits.", "Contact your Human Navigator for help with paperwork or travel."],
+      navTitle: "🚨 Human Navigator", navBody: "A Human Navigator has been notified (DEMO). In a medical emergency, contact your local emergency number immediately.", close: "Close",
+      footer: "FOR YOU prototype. Hospitals, slots, and availability are simulated DEMO DATA. Not medical advice. In an emergency, call your local emergency number.",
+      listening: "🎙️ Listening... please speak now.", youSaid: "You said:", tryAgain: "Could not hear that. Please try again.", noSpeech: "Speech recognition is not supported here. Please use Google Chrome.",
+      vLang: "Please say your language: English, Tamil, Hindi, or Telugu.", vMode: "Do you want voice assistance or manual method? Say voice or manual.",
+      vSearch: "Tell me the service you need and your city.", vHosp: "Here are the matching demo hospitals. Choose one.", vName: "Please say the patient's full name.",
+      vConfirmed: "Your demo appointment is confirmed.", vDocs: "Please check your document list.", vMed: "Please follow your medication instructions from your doctor.",
+      vRecQ: "How are you feeling after your visit? Say good or worse.", vWeek: "How is your health condition now? Say good or worse.",
+      vWorse: "Your condition is worse. Please contact your Human Navigator now.", vGood: "Great to hear. Keep following your care plan.",
+      vMobileAsk: "Please say your mobile number.", vLoggedIn: "Login successful."
+    },
+    ta: {
+      code: "ta-IN", langTitle: "மொழியைத் தேர்ந்தெடுக்கவும்", langSub: "குரல் அறிவிப்புகள் இந்த மொழியில் இருக்கும்.", speakLang: "🎤 மொழியைக் கூறுங்கள்",
+      modeTitle: "FOR YOU ஐ எப்படி பயன்படுத்த விரும்புகிறீர்கள்?", speakMode: "🎤 தேர்வைக் கூறுங்கள்", voiceMode: "🎤<br>குரல் உதவி", manualMode: "✋<br>கைமுறை",
+      dashTitle: "இன்று நீங்கள் என்ன செய்ய விரும்புகிறீர்கள்?", dashFind: "🏥 சிகிச்சை தேடுங்கள்", dashRecovery: "💊 மீட்சி சோதனை", dashWeekly: "📅 வாராந்திர நினைவூட்டல்", dashFollow: "📋 தொடர் நடவடிக்கைகள்",
+      findTitle: "சிகிச்சை தேடுங்கள்", findBtn: "பொருத்தமான விருப்பங்களைக் காட்டு", speakSearch: "🎤 தேடல் விவரங்களைக் கூறுங்கள்",
+      recTitle: "மீட்சி சோதனை", recQ: "மருத்துவரை சந்தித்த பிறகு நீங்கள் எப்படி உணர்கிறீர்கள்?", good: "நன்று / முன்னேற்றம்", worse: "மோசம்", speakRec: "🎤 பதிலைக் கூறுங்கள்", speakWeek: "🎤 பதிலைக் கூறுங்கள்",
+      back: "← பின்செல்", login: "உள்நுழை", logout: "வெளியேறு",
+      vLang: "உங்கள் மொழியைக் கூறுங்கள்: ஆங்கிலம், தமிழ், இந்தி அல்லது தெலுங்கு.", vMode: "குரல் உதவி வேண்டுமா அல்லது கைமுறை முறையா? குரல் அல்லது கைமுறை எனக் கூறுங்கள்.",
+      vSearch: "உங்களுக்கு தேவையான சிகிச்சையையும் நகரத்தையும் கூறுங்கள்.", vHosp: "பொருத்தமான டெமோ மருத்துவமனைகள் உள்ளன. ஒன்றைத் தேர்ந்தெடுக்கவும்.", vName: "நோயாளியின் முழு பெயரைக் கூறுங்கள்.",
+      vConfirmed: "உங்கள் டெமோ சந்திப்பு உறுதி செய்யப்பட்டது.", vDocs: "உங்கள் ஆவணப் பட்டியலைச் சரிபார்க்கவும்.", vMed: "மருத்துவர் அறிவுறுத்திய மருந்துகளை சரியாக பின்பற்றுங்கள்.",
+      vRecQ: "மருத்துவரை சந்தித்த பிறகு எப்படி உணர்கிறீர்கள்? நன்று அல்லது மோசம் எனக் கூறுங்கள்.", vWeek: "இப்போது உங்கள் உடல்நிலை எப்படி உள்ளது? நன்று அல்லது மோசம் எனக் கூறுங்கள்.",
+      vWorse: "உங்கள் நிலை மோசமாக உள்ளது. உடனடியாக உங்கள் மனித வழிகாட்டியைத் தொடர்பு கொள்ளுங்கள்.", vGood: "மகிழ்ச்சி! தொடர்ந்து கவனித்துக் கொள்ளுங்கள்.",
+      vMobileAsk: "உங்கள் கைபேசி எண்ணைக் கூறுங்கள்.", vLoggedIn: "உள்நுழைவு வெற்றிகரமாக நடைபெற்றது.",
+      listening: "🎙️ கேட்கிறது... இப்போது பேசுங்கள்.", youSaid: "நீங்கள் சொன்னது:", tryAgain: "கேட்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.", noSpeech: "இங்கு குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை. Google Chrome ஐப் பயன்படுத்தவும்.",
+      navTitle: "🚨 மனித வழிகாட்டி", close: "மூடு", demoTag: "டெமோ தரவு"
+    },
+    hi: {
+      code: "hi-IN", langTitle: "अपनी भाषा चुनें", langSub: "वॉइस संकेत इसी भाषा में होंगे।", speakLang: "🎤 भाषा बोलें",
+      modeTitle: "आप FOR YOU का उपयोग कैसे करना चाहते हैं?", speakMode: "🎤 विकल्प बोलें", voiceMode: "🎤<br>वॉइस सहायता", manualMode: "✋<br>मैनुअल",
+      dashTitle: "आज आप क्या करना चाहते हैं?", dashFind: "🏥 देखभाल खोजें", dashRecovery: "💊 रिकवरी जांच", dashWeekly: "📅 साप्ताहिक अनुस्मारक", dashFollow: "📋 फ़ॉलो-अप चरण",
+      findTitle: "देखभाल खोजें", findBtn: "उपयुक्त विकल्प खोजें", speakSearch: "🎤 खोज विवरण बोलें",
+      recTitle: "रिकवरी जांच", recQ: "डॉक्टर से मिलने के बाद आप कैसा महसूस कर रहे हैं?", good: "अच्छा / बेहतर", worse: "बदतर", speakRec: "🎤 उत्तर बोलें", speakWeek: "🎤 उत्तर बोलें",
+      back: "← वापस", login: "लॉगिन", logout: "लॉगआउट",
+      vLang: "कृपया अपनी भाषा बोलें: इंग्लिश, तमिल, हिंदी, या तेलुगु।", vMode: "क्या आप वॉइस सहायता चाहते हैं या मैनुअल? वॉइस या मैनुअल बोलें।",
+      vSearch: "कृपया बताएं आपको किस सेवा और किस शहर की ज़रूरत है।", vHosp: "मिलान वाले डेमो अस्पताल उपलब्ध हैं। एक चुनें।", vName: "कृपया रोगी का पूरा नाम बोलें।",
+      vConfirmed: "आपका डेमो अपॉइंटमेंट पुष्ट हो गया है।", vDocs: "कृपया अपनी दस्तावेज़ सूची जांच लें।", vMed: "कृपया डॉक्टर द्वारा बताई गई दवाइयों का पालन करें।",
+      vRecQ: "डॉक्टर से मिलने के बाद आप कैसा महसूस कर रहे हैं? अच्छा या बदतर बोलें।", vWeek: "अब आपकी स्वास्थ्य स्थिति कैसी है? अच्छा या बदतर बोलें।",
+      vWorse: "आपकी स्थिति बदतर है। कृपया तुरंत अपने ह्यूमन नेविगेटर से संपर्क करें।", vGood: "बहुत अच्छा! अपनी देखभाल जारी रखें।",
+      vMobileAsk: "कृपया अपना मोबाइल नंबर बोलें।", vLoggedIn: "लॉगिन सफल।",
+      listening: "🎙️ सुन रहा है... अब बोलें।", youSaid: "आपने कहा:", tryAgain: "सुनाई नहीं दिया। कृपया फिर प्रयास करें।", noSpeech: "यहाँ स्पीच रिकग्निशन समर्थित नहीं है। Google Chrome उपयोग करें।",
+      navTitle: "🚨 ह्यूमन नेविगेटर", close: "बंद करें", demoTag: "डेमो डेटा"
+    },
+    te: {
+      code: "te-IN", langTitle: "మీ భాషను ఎంచుకోండి", langSub: "వాయిస్ సూచనలు ఈ భాషలో ఉంటాయి.", speakLang: "🎤 భాష చెప్పండి",
+      modeTitle: "మీరు FOR YOU ని ఎలా ఉపయోగించాలనుకుంటున్నారు?", speakMode: "🎤 ఎంపిక చెప్పండి", voiceMode: "🎤<br>వాయిస్ సహాయం", manualMode: "✋<br>మాన్యువల్",
+      dashTitle: "ఈరోజు మీరు ఏం చేయాలనుకుంటున్నారు?", dashFind: "🏥 వైద్య సహాయం వెతకండి", dashRecovery: "💊 రికవరీ తనిఖీ", dashWeekly: "📅 వారపు రిమైండర్", dashFollow: "📋 తదుపరి దశలు",
+      findTitle: "వైద్య సహాయం వెతకండి", findBtn: "అనుకూల ఎంపికలు చూపించు", speakSearch: "🎤 శోధన వివరాలు చెప్పండి",
+      recTitle: "రికవరీ తనిఖీ", recQ: "వైద్యుడిని కలిసిన తర్వాత మీరు ఎలా ఉన్నారు?", good: "మంచిగా / మెరుగుపడ్డాను", worse: "చెడుగా ఉంది", speakRec: "🎤 సమాధానం చెప్పండి", speakWeek: "🎤 సమాధానం చెప్పండి",
+      back: "← వెనక్కి", login: "లాగిన్", logout: "లాగ్ అవుట్",
+      vLang: "దయచేసి మీ భాషను చెప్పండి: ఇంగ్లీష్, తమిళం, హిందీ లేదా తెలుగు.", vMode: "మీకు వాయిస్ సహాయం కావాలా లేదా మాన్యువల్ పద్ధతి కావాలా? వాయిస్ లేదా మాన్యువల్ అని చెప్పండి.",
+      vSearch: "మీకు కావాల్సిన వైద్య సేవ మరియు నగరాన్ని చెప్పండి.", vHosp: "సరిపోయే డెమో ఆసుపత్రులు ఉన్నాయి. ఒకదాన్ని ఎంచుకోండి.", vName: "దయచేసి రోగి పూర్తి పేరు చెప్పండి.",
+      vConfirmed: "మీ డెమో అపాయింట్‌మెంట్ ఖరారు అయింది.", vDocs: "దయచేసి మీ పత్రాల జాబితాను తనిఖీ చేయండి.", vMed: "మీ డాక్టర్ సూచించిన మందులను సరిగ్గా తీసుకోండి.",
+      vRecQ: "వైద్యుడిని కలిసిన తర్వాత మీరు ఎలా ఉన్నారు? మంచిగా లేదా చెడుగా అని చెప్పండి.", vWeek: "ఇప్పుడు మీ ఆరోగ్య స్థితి ఎలా ఉంది? మంచిగా లేదా చెడుగా అని చెప్పండి.",
+      vWorse: "మీ పరిస్థితి చెడుగా ఉంది. వెంటనే మీ హ్యూమన్ నావిగేటర్‌ను సంప్రదించండి.", vGood: "చాలా మంచిది! మీ సంరక్షణను కొనసాగించండి.",
+      vMobileAsk: "దయచేసి మీ మొబైల్ నంబర్ చెప్పండి.", vLoggedIn: "లాగిన్ విజయవంతమైంది.",
+      listening: "🎙️ వింటున్నాను... ఇప్పుడు మాట్లాడండి.", youSaid: "మీరు చెప్పినది:", tryAgain: "వినబడలేదు. మళ్లీ ప్రయత్నించండి.", noSpeech: "ఇక్కడ వాయిస్ గుర్తింపు మద్దతు లేదు. Google Chrome ఉపయోగించండి.",
+      navTitle: "🚨 హ్యూమన్ నావిగేటర్", close: "మూసివేయి", demoTag: "డెమో డేటా"
+    }
+  };
+
+  const LANG_CODES = { en: "en-IN", ta: "ta-IN", hi: "hi-IN", te: "te-IN" };
+
+  /* ---------- DEMO hospital data (fictional, for prototype only) ---------- */
+  const HOSPITALS = [
+    { name: "Demo Central Heart Clinic", city: "Chennai", services: ["Cardiology"], languages: ["English", "Tamil", "Hindi"], wheelchair: true, km: 3.2 },
+    { name: "Demo Lifeline Orthopedic Centre", city: "Chennai", services: ["Orthopedics"], languages: ["English", "Tamil"], wheelchair: true, km: 6.8 },
+    { name: "Demo Riverside ENT Hospital", city: "Chennai", services: ["ENT"], languages: ["English", "Telugu"], wheelchair: false, km: 4.1 },
+    { name: "Demo Women's Wellness Hospital", city: "Chennai", services: ["Gynecology"], languages: ["English", "Tamil", "Hindi"], wheelchair: true, km: 5.5 },
+    { name: "Demo Kovai Cardiac Institute", city: "Coimbatore", services: ["Cardiology"], languages: ["English", "Tamil", "Malayalam"], wheelchair: true, km: 2.0 },
+    { name: "Demo Kovai Bone & Joint Care", city: "Coimbatore", services: ["Orthopedics"], languages: ["English", "Tamil"], wheelchair: false, km: 3.7 },
+    { name: "Demo Trichy ENT & Head Clinic", city: "Trichy", services: ["ENT"], languages: ["English", "Tamil"], wheelchair: true, km: 2.9 },
+    { name: "Demo Tirunelveli Women's Care", city: "Tirunelveli", services: ["Gynecology"], languages: ["English", "Tamil", "Malayalam"], wheelchair: false, km: 4.4 },
+    { name: "Demo Puducherry Heart Centre", city: "Puducherry", services: ["Cardiology"], languages: ["English", "Tamil", "Telugu"], wheelchair: true, km: 3.9 }
+  ];
+
+  const SLOT_TEMPLATES = [
+    { date: "Mon, Nov 09, 2026", time: "10:00 AM" },
+    { date: "Tue, Nov 10, 2026", time: "02:30 PM" }
+  ];
+
+  /* ---------- State ---------- */
+  const state = {
+    lang: "en", mode: "manual", mobile: "", service: "Cardiology", city: "Chennai",
+    docLang: "Any", wheelchair: false, referral: false,
+    hospitals: [], hospital: null, slot: null, patient: "", stage: 0,
+    checkedDocs: {}, visitDone: false, recovery: null, weekly: null
+  };
+
+  const STAGES = ["Find Care", "Select Hospital", "Prepare Documents", "Attend Visit", "Follow-up"];
+  const STAGE_LABELS = { en: STAGES, ta: ["சிகிச்சை", "மருத்துவமனை", "ஆவணங்கள்", "சந்திப்பு", "தொடர்"], hi: ["देखभाल", "अस्पताल", "दस्तावेज़", "विज़िट", "फ़ॉलो-अप"], te: ["వైద్యం", "ఆసుపత్రి", "పత్రాలు", "సందర్శన", "తదుపరి"] };
+
+  /* ---------- Helpers ---------- */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const t = (k) => (T[state.lang] && T[state.lang][k]) || T.en[k] || k;
+  const digitsOnly = (s) => String(s).replace(/[^0-9]/g, "");
+  const validMobile = (s) => digitsOnly(s).length >= 6 && /^[0-9+\-\s]{6,20}$/.test(String(s).trim());
+
+  function speak(text) {
+    if (!("speechSynthesis" in window) || !text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG_CODES[state.lang] || "en-IN";
+    const voices = window.speechSynthesis.getVoices();
+    const v = voices.find((x) => x.lang.toLowerCase().startsWith(u.lang.toLowerCase()));
+    if (v) u.voice = v;
+    u.rate = 1;
+    window.speechSynthesis.speak(u);
+  }
+
+  function say(key) { if (state.mode === "voice") speak(t(key)); }
+
+  function listen(statusEl, onText, langOverride) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { statusEl.textContent = t("noSpeech"); return; }
+    const r = new SR();
+    r.lang = langOverride || LANG_CODES[state.lang] || "en-IN";
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    statusEl.textContent = t("listening");
+    r.onresult = (e) => {
+      const said = e.results[0][0].transcript;
+      statusEl.textContent = t("youSaid") + " \u201C" + said + "\u201D";
+      onText(said);
+    };
+    r.onerror = () => { statusEl.textContent = t("tryAgain"); };
+    try { r.start(); } catch (err) { statusEl.textContent = t("tryAgain"); }
+  }
+
+  /* ---------- Navigation & rendering ---------- */
+  const PAGES = ["pageLogin", "pageLang", "pageMode", "pageDash", "pageFind", "pageHospitals", "pageBooking", "pageDocs", "pageConfirm", "pagePostVisit", "pageRecovery", "pageWeekly", "pageFollow"];
+
+  function show(id) {
+    PAGES.forEach((p) => $(p).classList.toggle("hidden", p !== id));
+    $("tracker").classList.toggle("hidden", id === "pageLogin" || id === "pageLang" || id === "pageMode");
+    renderTracker();
+    applyI18n();
+    window.scrollTo(0, 0);
+  }
+
+  function renderTracker() {
+    const labels = STAGE_LABELS[state.lang] || STAGE_LABELS.en;
+    $("tracker").innerHTML = labels.map((label, i) => {
+      const cls = i < state.stage ? "done" : i === state.stage ? "current" : "";
+      return `<div class="step ${cls}">${i < state.stage ? "✓ " : ""}${esc(label)}</div>`;
+    }).join("");
+  }
+
+  function applyI18n() {
+    document.documentElement.lang = LANG_CODES[state.lang] ? state.lang : "en";
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (T.en[key] || (T[state.lang] && T[state.lang][key])) el.textContent = t(key);
+    });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.getAttribute("data-i18n-html")); });
+    document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.placeholder = t(el.getAttribute("data-i18n-ph")); });
+    $("dashWelcome").textContent = t("dashWelcome");
+    document.querySelectorAll(".voice-only").forEach((el) => el.classList.toggle("hidden", state.mode !== "voice"));
+  }
+
+  function renderSearchRef() {
+    $("refStatus").textContent = state.referral ? t("refHave") : t("refNone");
+    $("refYes").style.borderColor = state.referral ? "#38a1ff" : "";
+    $("refNo").style.borderColor = !state.referral ? "#38a1ff" : "";
+  }
+
+  function scoreHospital(h) {
+    let score = 0;
+    const reasons = [];
+    if (h.city === state.city) { score += 3; reasons.push("Located in " + state.city); }
+    else { score -= 2; reasons.push("Outside " + state.city + " (" + h.city + ")"); }
+    if (state.wheelchair && h.wheelchair) { score += 2; reasons.push("Wheelchair access listed"); }
+    if (state.docLang !== "Any" && h.languages.includes(state.docLang)) { score += 2; reasons.push(state.docLang + " language support"); }
+    score -= h.km * 0.15;
+    reasons.push(h.km + " km away");
+    return { score, reasons };
+  }
+
+  function findOptions() {
+    let pool = HOSPITALS.filter((h) => h.services.includes(state.service));
+    if (state.wheelchair) pool = pool.filter((h) => h.wheelchair);
+    const ranked = pool.map((h) => ({ h, ...scoreHospital(h) })).sort((a, b) => b.score - a.score).slice(0, 3);
+    state.hospitals = ranked.map((r, i) => ({
+      ...r.h,
+      id: i,
+      reasons: r.reasons,
+      slots: SLOT_TEMPLATES.map((s, j) => ({ ...s, time: j === 0 ? s.time : (i === 1 ? "11:30 AM" : s.time) }))
+    }));
+  }
+
+  function renderHospitals() {
+    const list = $("hospitalList");
+    if (!state.hospitals.length) {
+      list.innerHTML = `<div class="warning-box"><p>No demo hospitals match these filters. Try turning off the wheelchair filter or choosing another city.</p></div>`;
+      return;
+    }
+    list.innerHTML = state.hospitals.map((h) => `
+      <div class="hospital-card">
+        <span class="demo-tag">${esc(t("demoTag"))}</span>
+        <h3 style="margin-top:8px;">${esc(h.name)}</h3>
+        <p class="hospital-meta">📍 ${esc(h.city)} · ${h.km} ${esc(t("distance"))} · ${h.wheelchair ? "♿ " + esc(t("wheelYes")) : esc(t("wheelNo"))}</p>
+        <p class="hospital-meta">${esc(h.services[0])}</p>
+        <div>${h.languages.map((l) => `<span class="badge">${esc(l)}</span>`).join("")}</div>
+        <div class="why"><strong>${esc(t("why"))}:</strong> ${h.reasons.map(esc).join(" · ")}</div>
+        <div class="slot-row">
+          ${h.slots.map((s, j) => `<button type="button" class="secondary" data-hosp="${h.id}" data-slot="${j}">📅 ${esc(s.date)}<br>⏰ ${esc(s.time)}</button>`).join("")}
+        </div>
+      </div>`).join("");
+  }
+
+  function renderBooking() {
+    const h = state.hospital, s = state.slot;
+    $("slotSummary").innerHTML = `<strong>${esc(h.name)}</strong><br><span class="hint">📅 ${esc(s.date)} · ⏰ ${esc(s.time)}</span><br><span class="demo-tag" style="margin-top:6px;">${esc(t("demoTag"))}</span>`;
+  }
+
+  function renderDocs() {
+    const items = [
+      ["docGovt", "Government ID proof"],
+      ["docReports", "Previous medical reports"],
+      ["docRx", "Prescription slips"]
+    ];
+    if (state.referral) items.push(["docRef", "Referral letter"]);
+    items.push(["docPay", "Insurance or payment details (if applicable)"]);
+    $("docsList").innerHTML = items.map(([key, fallback]) => {
+      const checked = state.checkedDocs[key] ? "checked" : "";
+      return `<label class="docs-item"><input type="checkbox" data-doc="${key}" ${checked}><span>${esc(t(key) === key ? fallback : t(key))}</span></label>`;
+    }).join("");
+  }
+
+  function renderConfirm() {
+    const h = state.hospital, s = state.slot;
+    $("confDetails").innerHTML =
+      `<p><strong>Patient:</strong> ${esc(state.patient)}</p>` +
+      `<p><strong>Hospital:</strong> ${esc(h.name)}</p>` +
+      `<p><strong>Slot:</strong> ${esc(s.date)}, ${esc(s.time)}</p>` +
+      `<p><strong>Language support:</strong> ${esc(h.languages.join(", "))}</p>` +
+      `<span class="demo-tag">${esc(t("demoTag"))}</span>`;
+  }
+
+  function renderFollow() {
+    const items = T.en.followItems;
+    $("followList").innerHTML = items.map((x) => `<div class="docs-item"><span>✔️</span><span>${esc(x)}</span></div>`).join("");
+  }
+
+  function renderDashWelcome() {
+    $("dashWelcome").textContent = state.mobile ? t("dashWelcome") : "";
+  }
+
+  /* ---------- Flow actions ---------- */
+  function goLogin() {
+    const mobile = $("loginMobile").value.trim();
+    if (!validMobile(mobile)) { alert("Please enter a valid mobile number."); return false; }
+    state.mobile = mobile;
+    $("bookMobile").value = mobile;
+    return true;
+  }
+
+  function setLanguage(code) {
+    if (!T[code]) code = "en";
+    state.lang = code;
+    show("pageMode");
+    say("vMode");
+  }
+
+  function setMode(mode) {
+    state.mode = mode === "voice" ? "voice" : "manual";
+    if (state.mode === "manual" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    show("pageDash");
+    renderDashWelcome();
+    if (state.mode === "voice") speak(t("vLoggedIn"));
+  }
+
+  function goFind() {
+    show("pageFind");
+    renderSearchRef();
+    say("vSearch");
+  }
+
+  function runSearch() {
+    state.service = $("service").value;
+    state.city = $("city").value;
+    state.docLang = $("docLang").value;
+    state.wheelchair = $("wheelchair").checked;
+    findOptions();
+    state.stage = Math.max(state.stage, 1);
+    show("pageHospitals");
+    renderHospitals();
+    say("vHosp");
+  }
+
+  function pickSlot(hospIdx, slotIdx) {
+    state.hospital = state.hospitals[hospIdx];
+    state.slot = state.hospital.slots[slotIdx];
+    state.stage = Math.max(state.stage, 2);
+    show("pageBooking");
+    renderBooking();
+    say("vName");
+  }
+
+  function confirmBooking() {
+    const name = $("patientName").value.trim();
+    const mobile = $("bookMobile").value.trim();
+    if (!name) { alert("Please enter the patient's name."); return; }
+    if (!validMobile(mobile)) { alert("Please enter a valid mobile number."); return; }
+    state.patient = name.slice(0, 100);
+    state.mobile = mobile;
+    state.checkedDocs = {};
+    show("pageDocs");
+    renderDocs();
+    say("vDocs");
+  }
+
+  function docsDone() {
+    state.stage = Math.max(state.stage, 3);
+    show("pageConfirm");
+    renderConfirm();
+    say("vConfirmed");
+  }
+
+  function finishVisit() {
+    state.visitDone = true;
+    state.stage = 4;
+    show("pagePostVisit");
+    $("visitedName").textContent = state.hospital ? state.hospital.name + " (DEMO)" : "";
+    say("vMed");
+  }
+
+  function showRecovery(answer) {
+    state.recovery = answer;
+    const box = $("recResult");
+    box.classList.remove("hidden");
+    if (answer === "worse") {
+      box.innerHTML = `<div class="warning-box"><p>${esc(t("recWorse"))}</p><button type="button" class="warn" data-nav="1">🚨 ${esc(t("navTitle").replace("🚨 ", ""))}</button></div>`;
+      say("vWorse");
+    } else {
+      box.innerHTML = `<div class="success-box"><p>${esc(t("recGood"))}</p></div>`;
+      say("vGood");
+    }
+  }
+
+  function showWeekly(answer) {
+    state.weekly = answer;
+    const box = $("weekResult");
+    box.classList.remove("hidden");
+    if (answer === "worse") {
+      box.innerHTML = `<div class="warning-box"><p>${esc(t("weekWorse"))}</p><button type="button" class="warn" data-nav="1">🚨 Human Navigator</button></div>`;
+      say("vWorse");
+    } else {
+      box.innerHTML = `<div class="success-box"><p>${esc(t("weekGood"))}</p></div>`;
+      say("vGood");
+    }
+  }
+
+  function openNavigator() {
+    $("navOverlay").classList.remove("hidden");
+    if (state.mode === "voice") speak(t("vWorse"));
+  }
+
+  /* ---------- Voice parsing ---------- */
+  function parseLanguage(s) {
+    const x = s.toLowerCase();
+    if (x.includes("tamil") || /தமிழ்/.test(s)) return "ta";
+    if (x.includes("hindi") || /हिंदी|हिन्दी/.test(s)) return "hi";
+    if (x.includes("telugu") || /తెలుగు/.test(s)) return "te";
+    if (x.includes("english") || /ஆங்கிலம்|इंग्लिश/.test(s)) return "en";
+    return null;
+  }
+
+  function parseService(s) {
+    const x = s.toLowerCase();
+    if (/cardio|heart|இருதய|గుండె|हृदय/.test(x) || /cardio|heart/.test(x)) return "Cardiology";
+    if (/ortho|bone|joint|எலும்பு|ఎముక|हड्डी/.test(x)) return "Orthopedics";
+    if (/\bent\b|ear|nose|throat|காது|చెవి|कान/.test(x)) return "ENT";
+    if (/gyn|women|பெண்கள்|స్త్రీ|महिला/.test(x)) return "Gynecology";
+    return null;
+  }
+
+  function parseCity(s) {
+    const x = s.toLowerCase();
+    const map = [["Chennai", /chennai|சென்னை|చెన్నై|चेन्नई/], ["Coimbatore", /coimbatore|கோயம்புத்தூர்|కోయంబత్తూర్|कोयंबटूर/], ["Trichy", /trichy|திருச்சி|త్రిచీ|त्रिची/], ["Tirunelveli", /tirunelveli|திருநெல்வேலி|తిరునెల్వేలి|तिरुनेलवेली/], ["Puducherry", /puducherry|pondicherry|புதுச்சேரி|పుదుచ్చేరి|पुदुचेरी/]];
+    for (const [city, re] of map) if (re.test(x)) return city;
+    return null;
+  }
+
+  function parseMode(s) {
+    const x = s.toLowerCase();
+    if (/voice|குரல்|వాయిస్|वॉइस|वॉयस|voice/.test(x)) return "voice";
+    if (/manual|normal|கைமுறை|మాన్యువల్|मैनुअल|मैनुएल/.test(x)) return "manual";
+    return null;
+  }
+
+  function parseWorse(s) {
+    return /worse|bad|மோசம்|చెడు|बदतर|खराब/.test(s.toLowerCase()) || /மோசம்|చెడు|बदतर|खराब/.test(s);
+  }
+
+  /* ---------- Event wiring ---------- */
+  $("loginBtn").addEventListener("click", () => { if (goLogin()) { show("pageLang"); } });
+
+  $("loginVoiceBtn").addEventListener("click", () => {
+    const status = $("loginVoiceStatus");
+    listen(status, (said) => {
+      const digits = digitsOnly(said);
+      if (digits.length >= 6) {
+        $("loginMobile").value = digits;
+        status.textContent += " | " + "OK";
+        if (goLogin()) show("pageLang");
+      } else {
+        status.textContent += " | Please say the number again.";
+      }
+    }, "en-IN");
+  });
+
+  $("logoutBtn").addEventListener("click", () => {
+    state.mobile = ""; state.stage = 0; state.checkedDocs = {}; state.hospital = null; state.slot = null;
+    state.recovery = null; state.weekly = null; state.visitDone = false; state.patient = "";
+    $("loginMobile").value = "";
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    show("pageLogin");
+  });
+
+  document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => setLanguage(b.dataset.lang)));
+  document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+  $("langVoiceBtn").addEventListener("click", () => {
+    const status = $("langVoiceStatus");
+    speak(T.en.vLang);
+    setTimeout(() => listen(status, (said) => {
+      const code = parseLanguage(said);
+      if (code) setLanguage(code);
+      else status.textContent += " | " + t("tryAgain");
+    }, "en-IN"), 2500);
+  });
+
+  $("modeVoiceBtn").addEventListener("click", () => {
+    const status = $("modeVoiceStatus");
+    listen(status, (said) => {
+      const m = parseMode(said);
+      if (m) setMode(m);
+      else status.textContent += " | " + t("tryAgain");
+    });
+  });
+
+  $("refYes").addEventListener("click", () => { state.referral = true; renderSearchRef(); });
+  $("refNo").addEventListener("click", () => { state.referral = false; renderSearchRef(); });
+
+  $("findBtn").addEventListener("click", runSearch);
+
+  $("searchVoiceBtn").addEventListener("click", () => {
+    const status = $("searchVoiceStatus");
+    status.classList.remove("hidden");
+    listen(status, (said) => {
+      const service = parseService(said);
+      const city = parseCity(said);
+      if (service) $("service").value = service;
+      if (city) $("city").value = city;
+      runSearch();
+    });
+  });
+
+  $("nameVoiceBtn").addEventListener("click", () => {
+    const status = $("nameVoiceStatus");
+    status.classList.remove("hidden");
+    listen(status, (said) => { $("patientName").value = said.slice(0, 100); });
+  });
+
+  $("bookBtn").addEventListener("click", confirmBooking);
+  $("docsDoneBtn").addEventListener("click", docsDone);
+  $("finishVisitBtn").addEventListener("click", finishVisit);
+
+  $("docsList").addEventListener("change", (e) => {
+    const key = e.target.getAttribute("data-doc");
+    if (key) state.checkedDocs[key] = e.target.checked;
+  });
+
+  $("hospitalList").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-slot]");
+    if (btn) pickSlot(Number(btn.dataset.hosp), Number(btn.dataset.slot));
+  });
+
+  document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => {
+    const target = b.dataset.go;
+    if (target === "pageFind") { goFind(); return; }
+    if (target === "pageFollow") { renderFollow(); show("pageFollow"); return; }
+    if (target === "pageRecovery") { state.recovery = null; $("recResult").classList.add("hidden"); show("pageRecovery"); say("vRecQ"); return; }
+    if (target === "pageWeekly") { state.weekly = null; $("weekResult").classList.add("hidden"); show("pageWeekly"); say("vWeek"); return; }
+    show(target);
+  }));
+
+  document.querySelectorAll("[data-rec]").forEach((b) => b.addEventListener("click", () => showRecovery(b.dataset.rec)));
+  document.querySelectorAll("[data-week]").forEach((b) => b.addEventListener("click", () => showWeekly(b.dataset.week)));
+
+  $("recVoiceBtn").addEventListener("click", () => listen($("recResult"), (said) => showRecovery(parseWorse(said) ? "worse" : "good")));
+  $("weekVoiceBtn").addEventListener("click", () => listen($("weekResult"), (said) => showWeekly(parseWorse(said) ? "worse" : "good")));
+
+  $("navBtn").addEventListener("click", openNavigator);
+  document.addEventListener("click", (e) => { if (e.target.closest("[data-nav]")) openNavigator(); });
+  $("navClose").addEventListener("click", () => $("navOverlay").classList.add("hidden"));
+
+  /* ---------- Start ---------- */
+  document.addEventListener("DOMContentLoaded", () => {});
+  show("pageLogin");
+  if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+})();
+</script>
+</body>
+</html>
